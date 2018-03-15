@@ -8,10 +8,8 @@ import cv2
 import sys
 import time
 
-
-sys.path.append('/usr/local/lib/python2.7/site-packages')
 # Make sure that caffe is on the python path:
-caffe_root = '/SegNet/caffe-segnet/'
+caffe_root = '/home/pganti/git/caffe-segnet-cudnn7'
 sys.path.insert(0, caffe_root + 'python')
 import caffe
 
@@ -36,7 +34,8 @@ label_colours = cv2.imread(args.colours).astype(np.uint8)
 cv2.namedWindow("Input")
 cv2.namedWindow("SegNet")
 
-cap = cv2.VideoCapture(0) # Change this to your webcam ID, or file name for your video file
+filename="/home/pganti/git/SegNet-Tutorial/data/moose.avi"
+cap = cv2.VideoCapture(filename) # Change this to your webcam ID, or file name for your video file
 
 rval = True
 

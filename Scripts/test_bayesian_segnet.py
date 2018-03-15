@@ -11,7 +11,7 @@ import cv2
 import sys
 
 # Make sure that caffe is on the python path:
-caffe_root = '/SegNet/caffe-segnet/' 			# Change this to the absolute directoy to SegNet Caffe
+caffe_root = '/home/pganti/git/caffe-segnet-cudnn7/' 			# Change this to the absolute directoy to SegNet Caffe
 sys.path.insert(0, caffe_root + 'python')
 
 import caffe
