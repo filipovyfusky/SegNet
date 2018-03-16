@@ -1,12 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import os.path
-import json
-import scipy
 import argparse
-import math
-import pylab
-from sklearn.preprocessing import normalize
 
 import caffe
 
@@ -15,14 +9,17 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=str, required=True)
 parser.add_argument('--weights', type=str, required=True)
 parser.add_argument('--iter', type=int, required=True)
+parser.add_argument('--cpu', action='store_true', default=False)
 args = parser.parse_args()
 
-caffe.set_mode_gpu()
+if args.cpu:
+    caffe.set_mode_cpu()
+else:
+    caffe.set_mode_gpu()
 
 net = caffe.Net(args.model,
                 args.weights,
                 caffe.TEST)
-
 
 for i in range(0, args.iter):
 
@@ -77,10 +74,10 @@ for i in range(0, args.iter):
     rgb_gt[:, :, 1] = g_gt / 255.0
     rgb_gt[:, :, 2] = b_gt / 255.0
 
-    image = image/255.0
+    image = image / 255.0
 
-    image = np.transpose(image, (1,2,0))
-    output = np.transpose(output, (1,2,0))
+    image = np.transpose(image, (1, 2, 0))
+    output = np.transpose(output, (1, 2, 0))
     image = image[:, :, (2, 1, 0)]
 
     plt.figure()
