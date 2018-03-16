@@ -5,8 +5,8 @@ layer {
   top: "data"
   top: "label"
   dense_image_data_param {
-    source: "/SegNet/CamVid/test.txt"	# Change this to the absolute path to your data file
-    batch_size: 4			# Change this to be the number of Monte Carlo Dropout samples you wish to make
+    source: "/home/pganti/git/SegNet-Tutorial/CamVid/test.txt"
+    batch_size: 4 
   }
 }
 layer {

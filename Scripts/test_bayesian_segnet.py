@@ -35,11 +35,11 @@ with open(args.data) as f:
     input_image = caffe.io.resize_image(input_image_raw,
                                         (input_shape[2],
                                          input_shape[3]))
-    input_image = input_image*255
+    input_image = input_image * 255
     input_image = input_image.transpose((2, 0, 1))
     input_image = input_image[(2, 1, 0), :, :]
     input_image = np.asarray([input_image])
-    input_image = np.repeat(input_image, input_shape[0],axis=0)
+    input_image = np.repeat(input_image, input_shape[0], axis=0)
 
     out = net.forward_all(data=input_image)
 

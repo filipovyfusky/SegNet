@@ -1,7 +1,7 @@
 name: "VGG_ILSVRC_16_layer"
 input: "data"
 input_shape {
-  dim: 4 # Set this to your sample size
+  dim: 2 # Set this to your sample size
   dim: 3
   dim: 360
   dim: 480
