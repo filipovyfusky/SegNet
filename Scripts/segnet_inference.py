@@ -105,8 +105,8 @@ if __name__== "__main__":
             break
 
         # Crop and reshape input image
-        cropped_frame = crop_input(frame, input_shape)
-        # cropped_frame = cv2.resize(frame, (input_shape[3],input_shape[2]))
+        # cropped_frame = crop_input(frame, input_shape)
+        cropped_frame = cv2.resize(frame, (input_shape[3],input_shape[2]))
         # Input shape is (y, x, 3), needs to be reshaped to (3, y, x)
         input_image = cropped_frame.transpose((2, 0, 1))
 
