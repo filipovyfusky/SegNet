@@ -51,6 +51,20 @@ def overlay_segmentation_results(input_image, segmented_image):
 
     return segmented_image
 
+
+def display_results(segmented_image, confidence_map):
+    seg_window = "segmented_image"
+    conf_window = "confidence_map"
+
+    cv2.namedWindow(seg_window)
+    cv2.namedWindow(conf_window)
+
+    cv2.moveWindow(seg_window, 450, 750)
+    cv2.moveWindow(conf_window, 1000, 750)
+
+    cv2.imshow(seg_window, segmented_image)
+    cv2.imshow(conf_window, confidence_map)
+
 if __name__== "__main__":
     # Import arguments
     parser = argparse.ArgumentParser()
@@ -71,8 +85,8 @@ if __name__== "__main__":
         caffe.set_mode_gpu()
 
     input_shape = net.blobs['data'].data.shape
-    out_data = net.blobs['argmax'].data
-    prob_data = net.blobs['prob'].data
+    class_output = net.blobs['classes'].data
+    confidence_output = net.blobs['confidence'].data
 
     cap = cv2.VideoCapture(args.video_file)
 
@@ -95,21 +109,22 @@ if __name__== "__main__":
         end = time.time()
         print '%30s' % 'Executed SegNet in ', str((end - start) * 1000), 'ms'
 
-        # Extract segmentation indices and
-        segmentation_ind = np.squeeze(out_data).astype(np.uint8)
-        segmentation_bgr = np.asarray(LABEL_COLOURS[segmentation_ind]).astype(np.uint8)
-
-        # Overlay image with segmentation results and then display.
+        # Prepare segmented image results
+        classes = np.squeeze(class_output).astype(np.uint8)
+        segmentation_bgr = np.asarray(LABEL_COLOURS[classes]).astype(np.uint8)
         segmented_image = overlay_segmentation_results(resized_image,
                                                        segmentation_bgr)
 
-        # Display image. Add moveWindow to prevent it from opening off screen
-        cv2.imshow("segmented_image", segmentation_bgr)
+        # Prepare confidence results
+        confidence = np.squeeze(confidence_output).astype(np.float64)
+
+        # Display results
+        display_results(segmentation_bgr, confidence)
 
         key = cv2.waitKey(1)
         if key == 27:  # exit on ESC
             break
 
-    # Cleanup
+    # Cleanup windows
     cap.release()
     cv2.destroyAllWindows()

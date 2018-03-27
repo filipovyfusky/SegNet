@@ -1602,15 +1602,25 @@ layer {
   bottom: "conv1_1_D"
   top: "prob"
   softmax_param {
-    engine: CAFFE
+    engine: CUDNN 
   }
 }
 layer {
-  name: "argmax"
+  name: "classes"
   type: "ArgMax"
   bottom: "prob"
-  top: "argmax"
+  top: "classes"
   argmax_param {
     axis: 1
+  }
+}
+layer {
+  name: "confidence"
+  type: "ArgMax"
+  bottom: "prob"
+  top: "confidence"
+  argmax_param {
+    axis: 1
+    out_max_val: true
   }
 }
