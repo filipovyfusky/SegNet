@@ -58,18 +58,7 @@ if __name__== "__main__":
     parser.add_argument('--weights', type=str, required=True)
     parser.add_argument('--cpu', action='store_true', default=False)
     parser.add_argument('--video_file', type=str)
-    parser.add_argument('--webcam_num', type=int)
     args = parser.parse_args()
-
-    # Check if input is video_file or webcam_num
-    if args.video_file is not None and args.webcam_num is None:
-        input_source = args.video_file
-    elif args.video_file is None and args.webcam_num is not None:
-        input_source = args.webcam_num
-    elif args.video_file is None and args.webcam_num is None:
-        raise IOError("One of video_file or webcam_num must be specified!")
-    elif args.video_file is not None and args.webcam_num is not None:
-        raise IOError("Cannot specify both video_file and webcam_num!")
 
     # Set up caffe net
     net = caffe.Net(args.model,
@@ -85,7 +74,7 @@ if __name__== "__main__":
     out_data = net.blobs['argmax'].data
     output_shape = out_data.shape
 
-    cap = cv2.VideoCapture(input_source)
+    cap = cv2.VideoCapture(args.video_file)
 
     rval = True
     while rval:
