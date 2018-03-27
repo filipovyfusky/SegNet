@@ -32,14 +32,14 @@ LABEL_COLOURS = np.array([
 ])
 
 
-def overlay_segmentation_results(input_image, segmentation_rgb):
+def overlay_segmentation_results(input_image, segmented_image):
     """Overlays the segmentation results over the original image.
 
     Parameters
     ----------
     input_image:
         The original unsegmented image.
-    segmentation_rgb:
+    segmented_image:
         The segmented results.
 
     Returns
@@ -47,13 +47,9 @@ def overlay_segmentation_results(input_image, segmentation_rgb):
     segmented_image:
         The original image overlaid with the segmented results.
     """
+    cv2.addWeighted(input_image, 0.5, segmented_image, 0.5, 0, segmented_image)
 
-    cv2.addWeighted(input_image, 0.5, segmentation_rgb,
-                    0.5,
-                    0,
-                    segmentation_rgb)
-
-    return segmentation_rgb
+    return segmented_image
 
 if __name__== "__main__":
     # Import arguments
