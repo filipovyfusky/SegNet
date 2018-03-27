@@ -1597,9 +1597,18 @@ layer {
   }
 }
 layer {
+  name: "prob"
+  type: "Softmax"
+  bottom: "conv1_1_D"
+  top: "prob"
+  softmax_param {
+    engine: CAFFE
+  }
+}
+layer {
   name: "argmax"
   type: "ArgMax"
-  bottom: "conv1_1_D"
+  bottom: "prob"
   top: "argmax"
   argmax_param {
     axis: 1

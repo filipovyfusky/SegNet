@@ -60,7 +60,7 @@ if __name__== "__main__":
     parser.add_argument('--video_file', type=str)
     args = parser.parse_args()
 
-    # Set up caffe net
+    # Load caffe network
     net = caffe.Net(args.model,
                     args.weights,
                     caffe.TEST)
@@ -72,7 +72,7 @@ if __name__== "__main__":
 
     input_shape = net.blobs['data'].data.shape
     out_data = net.blobs['argmax'].data
-    output_shape = out_data.shape
+    prob_data = net.blobs['prob'].data
 
     cap = cv2.VideoCapture(args.video_file)
 
@@ -85,9 +85,9 @@ if __name__== "__main__":
             break
 
         # Crop and reshape input image
-        cropped_frame = cv2.resize(frame, (input_shape[3], input_shape[2]))
+        resized_image = cv2.resize(frame, (input_shape[3], input_shape[2]))
         # Input shape is (y, x, 3), needs to be reshaped to (3, y, x)
-        input_image = cropped_frame.transpose((2, 0, 1))
+        input_image = resized_image.transpose((2, 0, 1))
 
         # Inference using SegNet
         start = time.time()
@@ -100,7 +100,7 @@ if __name__== "__main__":
         segmentation_bgr = np.asarray(LABEL_COLOURS[segmentation_ind]).astype(np.uint8)
 
         # Overlay image with segmentation results and then display.
-        segmented_image = overlay_segmentation_results(cropped_frame,
+        segmented_image = overlay_segmentation_results(resized_image,
                                                        segmentation_bgr)
 
         # Display image. Add moveWindow to prevent it from opening off screen
