@@ -43,7 +43,6 @@ else:
 net = caffe.Net(args.model, args.weights, caffe.TEST)
 
 input_shape = net.blobs['data'].data.shape
-label_colours = cv2.imread(args.colours).astype(np.uint8)
 
 with open(args.data) as f:
     for line in f:
