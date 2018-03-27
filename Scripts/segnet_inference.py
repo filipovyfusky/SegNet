@@ -10,43 +10,36 @@ import time
 
 import caffe
 
+# Use colours which match Cityscapes
+# (180, 129, 69)  # 0 - Sky
+# (69, 69, 69)    # 1 - Building
+# (153, 153, 153) # 2 - Pole
+# (255, 69, 0)    # 3 - Road Marking
+# (128, 64, 128)  # 4 - Road
+# (231, 35, 244)  # 5 - Sidewalk
+# (35, 142, 106)  # 6 - Tree
+# (29, 170, 250)  # 7 - SignSymbol
+# (153, 153, 190) # 8 - Fence
+# (142, 0 , 0)    # 9 - Car
+# (60, 19, 219)   # 10 - Pedestrian
+# (32, 10, 119)   # 11 - Cyclist
 
-def crop_input(input_image, input_shape):
-    """Crops an image to the desired size, rather than resizing.
-
-    Parameters
-    ----------
-    input_image:
-        The image to crop.
-    Return
-    ------
-    output_image:
-        The cropped image.
-    """
-    ht = input_shape[2]
-    wt = input_shape[3]
-
-    hs, ws, cs = input_image.shape
-
-    if ht == hs and wt == ws:
-        return input_image
-
-    x = (ws - wt) / 2
-    y = (hs - ht) / 2
-
-    output_image = input_image[y:y + ht, x:x + wt]
-
-    return output_image
+LABEL_COLOURS = np.array([
+    [180, 129, 69], [69, 69, 69], [153, 153, 153],
+    [255, 69, 0], [128, 64, 128], [231, 35, 244],
+    [35, 142, 106], [29, 170, 250], [153, 153, 190],
+    [142, 0, 0], [60, 19, 219], [32, 10, 119],
+])
 
 
-def overlay_segmentation_results(input_image, segmented_image):
+def overlay_segmentation_results(input_image, segmentation_rgb):
     """Overlays the segmentation results over the original image.
 
     Parameters
     ----------
     input_image:
         The original unsegmented image.
-    segmented_image:
+    segmentation_rgb:
         The segmented results.
 
     Returns
@@ -54,16 +47,19 @@ def overlay_segmentation_results(input_image, segmented_image):
     segmented_image:
         The original image overlaid with the segmented results.
     """
-    cv2.addWeighted(input_image, 0.5, segmented_image, 0.5, 0, segmented_image)
 
-    return segmented_image
+    cv2.addWeighted(input_image, 0.5, segmentation_rgb,
+                    0.5,
+                    0,
+                    segmentation_rgb)
+
+    return segmentation_rgb
 
 if __name__== "__main__":
     # Import arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str, required=True)
     parser.add_argument('--weights', type=str, required=True)
-    parser.add_argument('--colours', type=str, required=True)
     parser.add_argument('--cpu', action='store_true', default=False)
     parser.add_argument('--video_file', type=str)
     parser.add_argument('--webcam_num', type=int)
@@ -92,7 +88,6 @@ if __name__== "__main__":
     input_shape = net.blobs['data'].data.shape
     out_data = net.blobs['argmax'].data
     output_shape = out_data.shape
-    label_colours = cv2.imread(args.colours).astype(np.uint8)
 
     cap = cv2.VideoCapture(input_source)
 
@@ -105,8 +100,7 @@ if __name__== "__main__":
             break
 
         # Crop and reshape input image
-        # cropped_frame = crop_input(frame, input_shape)
-        cropped_frame = cv2.resize(frame, (input_shape[3],input_shape[2]))
+        cropped_frame = cv2.resize(frame, (input_shape[3], input_shape[2]))
         # Input shape is (y, x, 3), needs to be reshaped to (3, y, x)
         input_image = cropped_frame.transpose((2, 0, 1))
 
@@ -116,21 +110,16 @@ if __name__== "__main__":
         end = time.time()
         print '%30s' % 'Executed SegNet in ', str((end - start) * 1000), 'ms'
 
-        segmentation_ind = np.squeeze(out_data)
-        segmentation_ind_3ch = np.resize(segmentation_ind,
-                                         (3, input_shape[2], input_shape[3]))
-        segmentation_ind_3ch = \
-            segmentation_ind_3ch.transpose(1, 2, 0).astype(np.uint8)
-
-        segmentation_rgb = np.zeros(segmentation_ind_3ch.shape, dtype=np.uint8)
-
-        # Lookup table transform to map the right colour for each class.
-        cv2.LUT(segmentation_ind_3ch, label_colours, segmentation_rgb)
+        # Extract segmentation indices and
+        segmentation_ind = np.squeeze(out_data).astype(np.uint8)
+        segmentation_bgr = np.asarray(LABEL_COLOURS[segmentation_ind]).astype(np.uint8)
 
         # Overlay image with segmentation results and then display.
         segmented_image = overlay_segmentation_results(cropped_frame,
-                                                       segmentation_rgb)
-        cv2.imshow("segmented_image", segmented_image)
+                                                       segmentation_bgr)
+
+        # Display image. Add moveWindow to prevent it from opening off screen
+        cv2.imshow("segmented_image", segmentation_bgr)
 
         key = cv2.waitKey(1)
         if key == 27:  # exit on ESC

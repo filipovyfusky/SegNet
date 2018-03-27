@@ -5,11 +5,31 @@ import cv2
 
 import caffe
 
+# Use colours which match Cityscapes
+# (180, 129, 69)  # 0 - Sky
+# (69, 69, 69)    # 1 - Building
+# (153, 153, 153) # 2 - Pole
+# (255, 69, 0)    # 3 - Road Marking
+# (128, 64, 128)  # 4 - Road
+# (231, 35, 244)  # 5 - Sidewalk
+# (35, 142, 106)  # 6 - Tree
+# (29, 170, 250)  # 7 - SignSymbol
+# (153, 153, 190) # 8 - Fence
+# (142, 0 , 0)    # 9 - Car
+# (60, 19, 219)   # 10 - Pedestrian
+# (32, 10, 119)   # 11 - Cyclist
+
+LABEL_COLOURS = [
+    [180, 129, 69], [69, 69, 69], [153, 153, 153],
+    [255, 69, 0], [128, 64, 128], [231, 35, 244],
+    [35, 142, 106], [29, 170, 250], [153, 153, 190],
+    [142, 0, 0], [60, 19, 219], [32, 10, 119],
+]
+
 # Import arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=str, required=True)
 parser.add_argument('--weights', type=str, required=True)
-parser.add_argument('--colours', type=str, required=True)
 parser.add_argument('--data', type=str, required=True)
 parser.add_argument('--cpu', action='store_true', default=False)
 args = parser.parse_args()
