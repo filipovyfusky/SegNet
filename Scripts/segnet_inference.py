@@ -1,11 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import os.path
-import scipy
 import argparse
-import math
 import cv2
-import sys
 import time
 
 import caffe
@@ -23,7 +18,6 @@ import caffe
 # (142, 0 , 0)    # 9 - Car
 # (60, 19, 219)   # 10 - Pedestrian
 # (32, 10, 119)   # 11 - Cyclist
-
 LABEL_COLOURS = np.array([
     [180, 129, 69], [69, 69, 69], [153, 153, 153],
     [255, 69, 0], [128, 64, 128], [231, 35, 244],
@@ -91,16 +85,19 @@ if __name__== "__main__":
                              "computation. If not set, will use GPU.")
     args = parser.parse_args()
 
-    # Load caffe network
-    net = caffe.Net(args.model,
-                    args.weights,
-                    caffe.TEST)
-
+    # Set computation mode
     if args.cpu:
         caffe.set_mode_cpu()
     else:
         caffe.set_mode_gpu()
 
+    # Load caffe network
+    net = caffe.Net(args.model,
+                    args.weights,
+                    caffe.TEST)
+
+
+    # Access blob data
     input_shape = net.blobs['data'].data.shape
     class_output = net.blobs['classes'].data
     confidence_output = net.blobs['confidence'].data
