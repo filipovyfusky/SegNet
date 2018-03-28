@@ -67,11 +67,28 @@ def display_results(segmented_image, confidence_map):
 
 if __name__== "__main__":
     # Import arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, required=True)
-    parser.add_argument('--weights', type=str, required=True)
-    parser.add_argument('--cpu', action='store_true', default=False)
-    parser.add_argument('--video_file', type=str)
+    parser = argparse.ArgumentParser(description="Semantically segment video/"
+                                                 "image input using SegNet.")
+    parser.add_argument('model',
+                        type=str,
+                        help="The model description to use for inference "
+                             "(.prototxt file)")
+    parser.add_argument('weights',
+                        type=str,
+                        help="The weights to use for inference"
+                             " (.caffemodel file)")
+    parser.add_argument('input_source',
+                        type=str,
+                        help="Input source for the network. May be either a "
+                             "video file, or a path to a sequence of images. To"
+                             "specify images, you must use the format required "
+                             "by OpenCVs VideoCapture. Reference can be found "
+                             "here: https://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-videocapture.")
+    parser.add_argument('-cpu',
+                        action='store_true',
+                        default=False,
+                        help="Flag to indicate whether or not to use CPU for "
+                             "computation. If not set, will use GPU.")
     args = parser.parse_args()
 
     # Load caffe network
@@ -88,7 +105,7 @@ if __name__== "__main__":
     class_output = net.blobs['classes'].data
     confidence_output = net.blobs['confidence'].data
 
-    cap = cv2.VideoCapture(args.video_file)
+    cap = cv2.VideoCapture(args.input_source)
 
     rval = True
     while rval:
