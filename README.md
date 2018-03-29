@@ -3,45 +3,31 @@
 This repository contains all the files for you to complete the 'Getting Started with SegNet' and the 'Bayesian SegNet' tutorials here:
 http://mi.eng.cam.ac.uk/projects/segnet/tutorial.html
 
-Please see this link for detailed instructions.
+Please note that if following this instruction set, that the folder names __have been modified__.
+
+For example, `Scripts` is now `scripts`, and the training scripts are located under `scripts/training`. The CamVid data is located under `data/CamVid`. And lastly, the models have all been sorted into `inference_models` and `training_models`.
 
 ## Caffe-SegNet
 
 SegNet requires a modified version of Caffe to run. Please see the [`caffe-segnet-cudnn7`](https://github.com/navganti/caffe-segnet-cudnn7/tree/7ffea61d08ef7dd153a5c207bfee42882115b104) submodule within this repository, and follow the installation instructions.
 
-## Getting Started with Live Demo
+## Getting Started
 
-If you would just like to try out an example model, then you can find the model used in the [SegNet webdemo](http://mi.eng.cam.ac.uk/projects/segnet/) in the folder ```Example_Models/```. You will need to download the weights separately using the link in the [SegNet Model Zoo](https://github.com/alexgkendall/SegNet-Tutorial/blob/master/Example_Models/segnet_model_zoo.md).
+To start, you can use the `scripts/segnet_inference.py` script. It is recommended to use this with the `segnet_cityscapes.prototxt` model, and Timo Sämann's trained weights, which are available for download [here](http://mi.eng.cam.ac.uk/~agk34/resources/SegNet/segnet_iter_30000_timo.caffemodel).
 
-First open ```Scripts/webcam_demo.py``` and edit line 14 to match the path to your installation of SegNet. You will also need a webcam, or alternatively edit line 39 to input a video file instead. To run the demo use the command:
+The inference script can be used as follows:
 
-```python Scripts/webcam_demo.py --model Example_Models/segnet_model_driving_webdemo.prototxt --weights /Example_Models/segnet_weights_driving_webdemo.caffemodel --colours /Scripts/camvid12.png```
-
-## Getting Started with Docker
-
-Use docker to compile caffe and run the examples. In order to run caffe on the gpu using docker, please install nvidia-docker (see https://github.com/NVIDIA/nvidia-docker or using ansbile: https://galaxy.ansible.com/ryanolson/nvidia-docker/)
-
-To run caffe on the CPU:
 ```
-docker build -t caffe:cpu ./cpu 
-# check if working
-docker run -ti caffe:cpu caffe --version
-# get a bash in container to run examples
-docker run -ti --volume=$(pwd):/SegNet -u $(id -u):$(id -g) caffe:cpu bash
+python scripts/inference.py inference_models/SegNet/segnet_cityscapes.prototxt /PATH/TO/segnet_iter_30000_timo.caffemodel /PATH/TO/SEGMENTATION/DATA [--cpu]
 ```
 
-To run caffe on the GPU:
-```
-docker build -t caffe:gpu ./gpu
-# check if working
-docker run -ti caffe:gpu caffe device_query -gpu 0
-# get a bash in container to run examples
-docker run -ti --volume=$(pwd):/SegNet -u $(id -u):$(id -g) caffe:gpu bash
-```
+The script uses OpenCV's [VideoCapture](https://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-videocapture) to parse the data. The easiest way to specify segmentation data is via a video file, such as an `.mp4` or `.avi`. Else, you must be sure to specify a folder of images with the format required for VideoCapture.
+
+The --cpu flag indicates whether or not to run segmentation using the CPU. The default is to use the GPU.
 
 ## Example Models
 
-A number of example models for indoor and outdoor road scene understanding can be found in the [SegNet Model Zoo](https://github.com/alexgkendall/SegNet-Tutorial/blob/master/Example_Models/segnet_model_zoo.md).
+A number of example models for indoor and outdoor road scene understanding can be found in the [SegNet Model Zoo](https://github.com/navganti/SegNet/blob/master/inference_models/segnet_model_zoo.md).
 
 ## Publications
 
@@ -51,7 +37,7 @@ http://arxiv.org/abs/1511.02680
 Alex Kendall, Vijay Badrinarayanan and Roberto Cipolla "Bayesian SegNet: Model Uncertainty in Deep Convolutional Encoder-Decoder Architectures for Scene Understanding." arXiv preprint arXiv:1511.02680, 2015.
 
 http://arxiv.org/abs/1511.00561
-Vijay Badrinarayanan, Alex Kendall and Roberto Cipolla "SegNet: A Deep Convolutional Encoder-Decoder Architecture for Image Segmentation." PAMI, 2017. 
+Vijay Badrinarayanan, Alex Kendall and Roberto Cipolla "SegNet: A Deep Convolutional Encoder-Decoder Architecture for Image Segmentation." PAMI, 2017.
 
 ## License
 
@@ -66,4 +52,3 @@ Alex Kendall
 agk34@cam.ac.uk
 
 Cambridge University
-
