@@ -9,7 +9,7 @@ For example, `Scripts` is now `scripts`, and the training scripts are located un
 
 ## Caffe-SegNet
 
-SegNet requires a modified version of Caffe to run. Please see the [`caffe-segnet-cudnn7`](https://github.com/navganti/caffe-segnet-cudnn7/tree/7ffea61d08ef7dd153a5c207bfee42882115b104) submodule within this repository, and follow the installation instructions.
+SegNet requires a modified version of Caffe to run. Please see the [`caffe-segnet-cudnn7`](https://github.com/navganti/caffe-segnet-cudnn7) submodule within this repository, and follow the installation instructions.
 
 ## Getting Started
 
