@@ -18,7 +18,8 @@ To start, you can use the `scripts/segnet_inference.py` script. It is recommende
 The inference script can be used as follows:
 
 ```
-python scripts/inference.py inference_models/SegNet/segnet_cityscapes.prototxt /PATH/TO/segnet_iter_30000_timo.caffemodel /PATH/TO/SEGMENTATION/DATA [--cpu]
+python scripts/inference.py inference_models/SegNet/segnet_cityscapes.prototxt \
+/PATH/TO/segnet_iter_30000_timo.caffemodel /PATH/TO/SEGMENTATION/DATA [--cpu]
 ```
 
 The script uses OpenCV's [VideoCapture](https://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-videocapture) to parse the data. The easiest way to specify segmentation data is via a video file, such as an `.mp4` or `.avi`. Else, you must be sure to specify a folder of images with the format required for VideoCapture.
