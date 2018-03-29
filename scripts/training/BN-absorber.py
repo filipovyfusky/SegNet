@@ -14,8 +14,6 @@ from argparse import ArgumentParser
 from os.path import join
 import argparse
 import sys
-caffe_root = '/SegNet/caffe-segnet-cudnn5/'  # Change this to the absolute directory to SegNet Caffe
-sys.path.insert(0, caffe_root + 'python')
 import caffe
 from caffe.proto import caffe_pb2
 from google.protobuf import text_format
