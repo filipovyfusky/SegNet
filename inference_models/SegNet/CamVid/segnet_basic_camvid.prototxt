@@ -489,11 +489,30 @@ layer {
   }
 }
 layer {
-  name: "argmax"
-  type: "ArgMax"
+  name: "prob"
+  type: "Softmax"
   bottom: "dense_softmax_inner_prod"
-  top: "argmax"
+  top: "prob"
+  softmax_param {
+    engine: CUDNN
+  }
+}
+layer {
+  name: "classes"
+  type: "ArgMax"
+  bottom: "prob"
+  top: "classes"
   argmax_param {
     axis: 1
+  }
+}
+layer {
+  name: "confidence"
+  type: "ArgMax"
+  bottom: "prob"
+  top: "confidence"
+  argmax_param {
+    axis: 1
+    out_max_val: true
   }
 }

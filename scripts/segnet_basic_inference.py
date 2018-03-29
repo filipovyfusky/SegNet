@@ -9,14 +9,14 @@ import caffe
 # (180, 129, 69)  # 0 - Sky
 # (69, 69, 69)    # 1 - Building
 # (153, 153, 153) # 2 - Column/Pole
-# (128, 64, 128)  # 3 - Road
-# (231, 35, 244)  # 4 - Sidewalk
-# (35, 142, 106)  # 5 - Tree
-# (29, 170, 250)  # 6 - SignSymbol
-# (153, 153, 190) # 7 - Fence
-# (142, 0 , 0)    # 8 - Car
-# (60, 19, 219)   # 9 - Pedestrian
-# (32, 10, 119)   # 10 - Cyclist
+# (128, 64, 128)  # 4 - Road
+# (231, 35, 244)  # 5 - Sidewalk
+# (35, 142, 106)  # 6 - Tree
+# (29, 170, 250)  # 7 - SignSymbol
+# (153, 153, 190) # 8 - Fence
+# (142, 0 , 0)    # 9 - Car
+# (60, 19, 219)   # 10 - Pedestrian
+# (32, 10, 119)   # 11 - Cyclist
 LABEL_COLOURS = np.array([
     [180, 129, 69], [69, 69, 69], [153, 153, 153],
     [128, 64, 128], [231, 35, 244], [35, 142, 106],
@@ -45,28 +45,23 @@ def overlay_segmentation_results(input_image, segmented_image):
     return segmented_image
 
 
-def display_results(segmented_image, confidence_map, variance_map):
+def display_results(segmented_image, confidence_map):
     seg_window = "segmented_image"
     conf_window = "confidence_map"
-    var_window = "variance_map"
 
     cv2.namedWindow(seg_window)
     cv2.namedWindow(conf_window)
-    cv2.namedWindow(var_window)
 
-    cv2.moveWindow(seg_window, 100, 750)
-    cv2.moveWindow(conf_window, 600, 750)
-    cv2.moveWindow(var_window, 1100, 750)
+    cv2.moveWindow(seg_window, 450, 750)
+    cv2.moveWindow(conf_window, 1000, 750)
 
     cv2.imshow(seg_window, segmented_image)
     cv2.imshow(conf_window, confidence_map)
-    cv2.imshow(var_window, variance_map)
 
-if __name__ == "__main__":
+if __name__== "__main__":
     # Import arguments
     parser = argparse.ArgumentParser(description="Semantically segment video/"
-                                                 "image input using Bayesian"
-                                                 " SegNet.")
+                                                 "image input using SegNet.")
     parser.add_argument('model',
                         type=str,
                         help="The model description to use for inference "
@@ -76,13 +71,13 @@ if __name__ == "__main__":
                         help="The weights to use for inference"
                              " (.caffemodel file)")
     parser.add_argument('input_source',
-                       type=str,
-                       help="Input source for the network. May be either a "
-                            "video file, or a path to a sequence of images. To"
-                            "specify images, you must use the format required "
-                            "by OpenCVs VideoCapture. Reference can be found "
-                            "here: https://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-videocapture.")
-    parser.add_argument('-cpu',
+                        type=str,
+                        help="Input source for the network. May be either a "
+                             "video file, or a path to a sequence of images. To"
+                             "specify images, you must use the format required "
+                             "by OpenCVs VideoCapture. Reference can be found "
+                             "here: https://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-videocapture.")
+    parser.add_argument('--cpu',
                         action='store_true',
                         default=False,
                         help="Flag to indicate whether or not to use CPU for "
@@ -95,12 +90,15 @@ if __name__ == "__main__":
     else:
         caffe.set_mode_gpu()
 
-    # Load Caffe network
-    net = caffe.Net(args.model, args.weights, caffe.TEST)
+    # Load caffe network
+    net = caffe.Net(args.model,
+                    args.weights,
+                    caffe.TEST)
 
     # Access blob data
     input_shape = net.blobs['data'].data.shape
-    confidence_output = net.blobs['prob'].data
+    class_output = net.blobs['classes'].data
+    confidence_output = net.blobs['confidence'].data
 
     cap = cv2.VideoCapture(args.input_source)
 
@@ -118,48 +116,22 @@ if __name__ == "__main__":
         # Input shape is (y, x, 3), needs to be reshaped to (3, y, x)
         input_image = resized_image.transpose((2, 0, 1))
 
-        # Repeat image according to batch size for inference.
-        input_image = np.repeat(input_image[np.newaxis, :, :, :],
-                                input_shape[0],
-                                axis=0)
-
-        # Inference using Bayesian SegNet
+        # Inference using SegNet
         start = time.time()
         out = net.forward_all(data=input_image)
         end = time.time()
-        print '%30s' % 'Executed Bayesian SegNet in ',\
-            str((end - start) * 1000), 'ms'
+        print '%30s' % 'Executed SegNet in ', str((end - start) * 1000), 'ms'
 
-        mean_confidence = np.mean(confidence_output, axis=0, dtype=np.float64)
-        var_confidence = np.var(confidence_output, axis=0, dtype=np.float64)
-
-        # Prepare semgented image results
-        classes = np.argmax(mean_confidence, axis=0)
+        # Prepare segmented image results
+        classes = np.squeeze(class_output).astype(np.uint8)
         segmentation_bgr = np.asarray(LABEL_COLOURS[classes]).astype(np.uint8)
         segmented_image = overlay_segmentation_results(resized_image,
                                                        segmentation_bgr)
 
         # Prepare confidence results
-        confidence = np.amax(mean_confidence, axis=0)
+        confidence = np.squeeze(confidence_output).astype(np.float64)
 
-        # Prepare uncertainty results
-        uncertainty = np.mean(var_confidence,
-                              axis=0,
-                              dtype=np.float64)
-
-        # Normalize variance for display
-        normalized_uncertainty = np.zeros((uncertainty.shape[0],
-                                          uncertainty.shape[1]),
-                                          np.float64)
-
-        cv2.normalize(uncertainty,
-                      normalized_uncertainty,
-                      0,
-                      1,
-                      cv2.NORM_MINMAX,
-                      cv2.CV_64FC1)
-
-        display_results(segmented_image, confidence, normalized_uncertainty)
+        display_results(segmentation_bgr, confidence)
 
         key = cv2.waitKey(1)
         if key == 27:  # exit on ESC
