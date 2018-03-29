@@ -43,7 +43,8 @@ def bn_absorber_weights(model, weights):
     # iterate over all layers of the network
     for i, layer in enumerate(msg.layer):
 
-        # check if conv layer exist right before bn layer, otherwise merging is not possible and skip
+        # check if conv layer exist right before bn layer, otherwise merging
+        #  is not possible and skip
         if not layer.type == 'BN':
             continue
         if not msg.layer[i-1].type == 'Convolution':
@@ -64,7 +65,8 @@ def bn_absorber_weights(model, weights):
         weight = copy_double(net.params[conv_layer][0].data)
         bias = copy_double(net.params[conv_layer][1].data)
 
-        # receive new_gamma and new_beta which was already calculated by the compute_bn_statistics.py script
+        # receive new_gamma and new_beta which was already calculated by the
+        # compute_bn_statistics.py script
         new_gamma = net.params[bn_layer][0].data[...]
         new_beta = net.params[bn_layer][1].data[...]
 
@@ -102,38 +104,57 @@ def bn_absorber_prototxt(model):
 
 
 def make_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, required=True, help='.prototxt file which you want to use for inference')
-    parser.add_argument('--weights', type=str, required=True, help='.caffemodel file in which the batch normalization '
-                                                                   'and convolutional layer should be merged')
-    parser.add_argument('--out_dir', type=str, required=True,
-                        help='output directory in which the modified model and weights should be stored')
-    parser.add_argument('--gpu', type=str, default='0', help='0: gpu mode active, else gpu mode inactive')
+    parser = argparse.ArgumentParser("Script to merge together batch"
+                                     "normalization layers with preceding "
+                                     "convolution layers in order to "
+                                     "speed up inference.")
+    parser.add_argument('model',
+                        type=str,
+                        help="The model description to use for inference "
+                             "(.prototxt file)")
+    parser.add_argument('weights',
+                        type=str,
+                        help="The weights (.caffemodel file) in which the "
+                             "batch normalization and convolution layers are"
+                             "to be merged.")
+    parser.add_argument('out_dir',
+                        type=str,
+                        help="Output directory to store the merged .prototxt"
+                             "and .caffemodel files.")
+    parser.add_argument('--cpu',
+                        action='store_true',
+                        default=False,
+                        help="Flag to indicate whether or not to use CPU for "
+                             "computation. If not set, will use GPU.")
     return parser
-
 
 if __name__ == '__main__':
     parser1 = make_parser()
     args = parser1.parse_args()
-    if args.gpu == 0:
-        caffe.set_mode_gpu()
-    else:
+    
+    if args.cpu:
         caffe.set_mode_cpu()
+    else:
+        caffe.set_mode_gpu()
 
-    # check if output directory exist
+    # Check if output directory exists, create if not
     if not os.path.exists(args.out_dir):
         os.makedirs(args.out_dir)
 
-    network = bn_absorber_weights(args.model, args.weights)  # merge bn layer into conv kernel
-    msg_proto = bn_absorber_prototxt(args.model)  # remove bn layer from prototxt file
+    # Merge bn layer into conv kernel
+    network = bn_absorber_weights(args.model, args.weights)
 
-    # save prototxt for inference
+    # Remove bn layer from prototxt file
+    msg_proto = bn_absorber_prototxt(args.model)
+
+    # Save prototxt for inference
     print "Saving inference prototxt file..."
     path = os.path.join(args.out_dir, "bn_conv_merged_model.prototxt")
     with open(path, 'w') as m:
         m.write(text_format.MessageToString(msg_proto))
 
-    # save weights
+    # Save weights
     print "Saving new weights..."
-    network.save(os.path.join(args.out_dir, "bn_conv_merged_weights.caffemodel"))
+    network.save(os.path.join(args.out_dir,
+                              "bn_conv_merged_weights.caffemodel"))
     print "Done!"

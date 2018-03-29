@@ -59,8 +59,15 @@ def display_results(segmented_image, confidence_map):
     cv2.imshow(seg_window, segmented_image)
     cv2.imshow(conf_window, confidence_map)
 
-if __name__== "__main__":
-    # Import arguments
+
+def make_parser():
+    """ Create ArgumentParser with description.
+
+    Returns
+    -------
+    parser
+        The customized parser.
+    """
     parser = argparse.ArgumentParser(description="Semantically segment video/"
                                                  "image input using SegNet.")
     parser.add_argument('model',
@@ -83,6 +90,12 @@ if __name__== "__main__":
                         default=False,
                         help="Flag to indicate whether or not to use CPU for "
                              "computation. If not set, will use GPU.")
+
+    return parser
+
+if __name__== "__main__":
+    # Import arguments
+    parser = make_parser()
     args = parser.parse_args()
 
     # Set computation mode

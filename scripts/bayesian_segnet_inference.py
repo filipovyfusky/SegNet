@@ -62,11 +62,19 @@ def display_results(segmented_image, confidence_map, variance_map):
     cv2.imshow(conf_window, confidence_map)
     cv2.imshow(var_window, variance_map)
 
-if __name__ == "__main__":
-    # Import arguments
-    parser = argparse.ArgumentParser(description="Semantically segment video/"
+
+def make_parser():
+    """Create ArgumentParser with description
+
+    Returns
+    -------
+    parser
+        The customized parser.
+    """
+    parser =  argparse.ArgumentParser(description="Semantically segment video/"
                                                  "image input using Bayesian"
-                                                 " SegNet.")
+                                                 " SegNet or Bayesian SegNet"
+                                                 " Basic.")
     parser.add_argument('model',
                         type=str,
                         help="The model description to use for inference "
@@ -82,11 +90,15 @@ if __name__ == "__main__":
                             "specify images, you must use the format required "
                             "by OpenCVs VideoCapture. Reference can be found "
                             "here: https://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-videocapture.")
-    parser.add_argument('-cpu',
+    parser.add_argument('--cpu',
                         action='store_true',
                         default=False,
                         help="Flag to indicate whether or not to use CPU for "
                              "computation. If not set, will use GPU.")
+
+if __name__ == "__main__":
+    # Import arguments
+    parser = make_parser()
     args = parser.parse_args()
 
     # Set computation mode
