@@ -19,10 +19,12 @@ The inference script can be used as follows:
 
 ```
 python scripts/inference.py inference_models/SegNet/segnet_cityscapes.prototxt \
-/PATH/TO/segnet_iter_30000_timo.caffemodel /PATH/TO/SEGMENTATION/DATA [--cpu]
+/PATH/TO/segnet_iter_30000_timo.caffemodel data/test_segmentation.avi [--cpu]
 ```
 
-The script uses OpenCV's [VideoCapture](https://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-videocapture) to parse the data. The easiest way to specify segmentation data is via a video file, such as an `.mp4` or `.avi`. Else, you must be sure to specify a folder of images with the format required for VideoCapture.
+The script uses OpenCV's [VideoCapture](https://docs.opencv.org/2.4/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-videocapture) to parse the data. An example video file has been provided for testing, `data/test_segmentation.avi`.
+
+The easiest way to specify your own segmentation data is via a video file, such as an `.mp4` or `.avi`. Else, you must be sure to specify a folder of images with the format required for VideoCapture.
 
 The --cpu flag indicates whether or not to run segmentation using the CPU. The default is to use the GPU.
 
