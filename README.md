@@ -7,11 +7,7 @@ Please see this link for detailed instructions.
 
 ## Caffe-SegNet
 
-SegNet requires a modified version of Caffe to run. Please download and compile caffe-segnet to use these models:
-https://github.com/alexgkendall/caffe-segnet
-
-This version supports cudnn v2 acceleration. @TimoSaemann has a branch supporting a more recent version of Caffe (Dec 2016) with cudnn v5.1:
-https://github.com/TimoSaemann/caffe-segnet-cudnn5
+SegNet requires a modified version of Caffe to run. Please see the [`caffe-segnet-cudnn7`](https://github.com/navganti/caffe-segnet-cudnn7/tree/7ffea61d08ef7dd153a5c207bfee42882115b104) submodule within this repository, and follow the installation instructions.
 
 ## Getting Started with Live Demo
 
@@ -25,7 +21,7 @@ First open ```Scripts/webcam_demo.py``` and edit line 14 to match the path to yo
 
 Use docker to compile caffe and run the examples. In order to run caffe on the gpu using docker, please install nvidia-docker (see https://github.com/NVIDIA/nvidia-docker or using ansbile: https://galaxy.ansible.com/ryanolson/nvidia-docker/)
 
-to run caffe on the CPU:
+To run caffe on the CPU:
 ```
 docker build -t caffe:cpu ./cpu 
 # check if working
@@ -34,7 +30,7 @@ docker run -ti caffe:cpu caffe --version
 docker run -ti --volume=$(pwd):/SegNet -u $(id -u):$(id -g) caffe:cpu bash
 ```
 
-to run caffe on the GPU:
+To run caffe on the GPU:
 ```
 docker build -t caffe:gpu ./gpu
 # check if working
