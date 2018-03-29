@@ -9,7 +9,7 @@ import caffe
 # (180, 129, 69)  # 0 - Sky
 # (69, 69, 69)    # 1 - Building
 # (153, 153, 153) # 2 - Column/Pole
-# (255, 69, 0)    # 3 - Road Marking
+# (0, 69, 255)    # 3 - Road Marking
 # (128, 64, 128)  # 4 - Road
 # (231, 35, 244)  # 5 - Sidewalk
 # (35, 142, 106)  # 6 - Tree
@@ -20,7 +20,7 @@ import caffe
 # (32, 10, 119)   # 11 - Cyclist
 LABEL_COLOURS = np.array([
     [180, 129, 69], [69, 69, 69], [153, 153, 153],
-    [255, 69, 0], [128, 64, 128], [231, 35, 244],
+    [0, 69, 255], [128, 64, 128], [231, 35, 244],
     [35, 142, 106], [29, 170, 250], [153, 153, 190],
     [142, 0, 0], [60, 19, 219], [32, 10, 119],
 ])
@@ -108,6 +108,7 @@ if __name__== "__main__":
         # Get image from VideoCapture
         rval, frame = cap.read()
         if not rval:
+            print("No image found!")
             break
 
         # Resize input image

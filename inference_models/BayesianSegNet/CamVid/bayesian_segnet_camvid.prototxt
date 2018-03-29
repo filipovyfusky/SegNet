@@ -1665,8 +1665,8 @@ layer {
 }
 layer {
   bottom: "conv1_1_D"
-  top: "conv0_0_D"
-  name: "conv0_0_D"
+  top: "camvid"
+  name: "camvid"
   type: "Convolution"
   param {
     lr_mult: 1
@@ -1692,9 +1692,7 @@ layer {
 layer {
   name: "prob"
   type: "Softmax"
-  bottom: "conv0_0_D"
+  bottom: "camvid"
   top: "prob"
-  softmax_param {
-    engine: CUDNN
-  }
+  softmax_param {engine: CAFFE}
 }

@@ -109,6 +109,7 @@ if __name__ == "__main__":
         # Get image from VideoCapture
         rval, frame = cap.read()
         if not rval:
+            print("No image found!")
             break
 
         # Resize input image
