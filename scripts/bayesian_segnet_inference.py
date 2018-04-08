@@ -54,9 +54,9 @@ def display_results(segmented_image, confidence_map, variance_map):
     cv2.namedWindow(conf_window)
     cv2.namedWindow(var_window)
 
-    cv2.moveWindow(seg_window, 100, 750)
-    cv2.moveWindow(conf_window, 600, 750)
-    cv2.moveWindow(var_window, 1100, 750)
+    cv2.moveWindow(seg_window, 100, 500)
+    cv2.moveWindow(conf_window, 600, 500)
+    cv2.moveWindow(var_window, 1100, 500)
 
     cv2.imshow(seg_window, segmented_image)
     cv2.imshow(conf_window, confidence_map)
@@ -71,7 +71,7 @@ def make_parser():
     parser
         The customized parser.
     """
-    parser =  argparse.ArgumentParser(description="Semantically segment video/"
+    parser = argparse.ArgumentParser(description="Semantically segment video/"
                                                  "image input using Bayesian"
                                                  " SegNet or Bayesian SegNet"
                                                  " Basic.")
@@ -95,6 +95,8 @@ def make_parser():
                         default=False,
                         help="Flag to indicate whether or not to use CPU for "
                              "computation. If not set, will use GPU.")
+
+    return parser
 
 if __name__ == "__main__":
     # Import arguments
@@ -159,6 +161,8 @@ if __name__ == "__main__":
                               axis=0,
                               dtype=np.float64)
 
+        print(np.sqrt(np.mean(uncertainty)))
+
         # Normalize variance for display
         normalized_uncertainty = np.zeros((uncertainty.shape[0],
                                           uncertainty.shape[1]),
@@ -172,6 +176,8 @@ if __name__ == "__main__":
                       cv2.CV_64FC1)
 
         display_results(segmented_image, confidence, normalized_uncertainty)
+
+        print("Mean ")
 
         key = cv2.waitKey(1)
         if key == 27:  # exit on ESC
