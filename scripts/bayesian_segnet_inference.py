@@ -147,7 +147,7 @@ if __name__ == "__main__":
         mean_confidence = np.mean(confidence_output, axis=0, dtype=np.float64)
         var_confidence = np.var(confidence_output, axis=0, dtype=np.float64)
 
-        # Prepare semgented image results
+        # Prepare segmented image results
         classes = np.argmax(mean_confidence, axis=0)
         segmentation_bgr = np.asarray(LABEL_COLOURS[classes]).astype(np.uint8)
         segmented_image = overlay_segmentation_results(resized_image,
@@ -167,6 +167,7 @@ if __name__ == "__main__":
         normalized_uncertainty = np.zeros((uncertainty.shape[0],
                                           uncertainty.shape[1]),
                                           np.float64)
+
 
         cv2.normalize(uncertainty,
                       normalized_uncertainty,
