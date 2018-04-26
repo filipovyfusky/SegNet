@@ -1,12 +1,13 @@
-name: "segnet"
+name: "VGG_ILSVRC_16_layer"
 layer {
   name: "data"
-  type: "DenseImageData"
+  type: "Python"
   top: "data"
   top: "label"
-  dense_image_data_param {
-    source: "/SegNet/CamVid/test.txt"	# Change this to the absolute path to your data file
-    batch_size: 8			# Change this to be the number of Monte Carlo Dropout samples you wish to make
+  python_param {
+    module: "segnet_data_layers"
+    layer: "SegNetSegDataLayer"
+    param_str: "{\'data_dirs\': \'~/wave/SegNet/datasets/dataset_1', \'data_proportions\': [0.25], \'batch_size\': 3, \'split\': \'train\', \'seed\': 1337}"
   }
 }
 layer {
@@ -51,7 +52,6 @@ layer {
   name: "conv1_bn"
   type: "BN"
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -111,7 +111,6 @@ layer {
   name: "conv2_bn"
   type: "BN"
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -171,7 +170,6 @@ layer {
   name: "conv3_bn"
   type: "BN"
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -207,7 +205,6 @@ layer {
   top: "pool3"
   dropout_param {
     dropout_ratio: 0.5
-    sample_weights_test: true
   }
 }
 layer {
@@ -241,7 +238,6 @@ layer {
   name: "conv4_bn"
   type: "BN"
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -277,7 +273,6 @@ layer {
   top: "pool4"
   dropout_param {
     dropout_ratio: 0.5
-    sample_weights_test: true
   }
 }
 layer {
@@ -288,7 +283,6 @@ layer {
   top: "upsample4"
   upsample_param {
     scale: 2
-    pad_out_h: true
   }
 }
 layer {
@@ -322,7 +316,6 @@ layer {
   name: "conv_decode4_bn"
   type: "BN"
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -340,7 +333,6 @@ layer {
   top: "conv_decode4"
   dropout_param {
     dropout_ratio: 0.5
-    sample_weights_test: true
   }
 }
 layer {
@@ -384,7 +376,6 @@ layer {
   name: "conv_decode3_bn"
   type: "BN"
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -402,7 +393,6 @@ layer {
   top: "conv_decode3"
   dropout_param {
     dropout_ratio: 0.5
-    sample_weights_test: true
   }
 }
 layer {
@@ -446,7 +436,6 @@ layer {
   name: "conv_decode2_bn"
   type: "BN"
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -498,7 +487,6 @@ layer {
   name: "conv_decode1_bn"
   type: "BN"
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -523,7 +511,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 11
+    num_output: 16
     kernel_size: 1
     weight_filler {
       type: "msra"
@@ -534,9 +522,38 @@ layer {
   }
 }
 layer {
-  name: "prob"
-  type: "Softmax"
+  name: "loss"
+  type: "SoftmaxWithLoss"
   bottom: "dense_softmax_inner_prod"
-  top: "prob"
+  bottom: "label"
+  top: "loss"
   softmax_param {engine: CAFFE}
+  loss_param: {
+    weight_by_label_freqs: true
+    ignore_label: 16
+    class_weighting: 1.35923286
+    class_weighting: 0.19700279
+    class_weighting: 0.59140844
+    class_weighting: 0.11002103
+    class_weighting: 0.94509453
+    class_weighting: 2.0840371
+    class_weighting: 6.80332421
+    class_weighting: 4.36417918
+    class_weighting: 0.15595792
+    class_weighting: 1.59821294
+    class_weighting: 0.57162455
+    class_weighting: 1.64692292
+    class_weighting: 0.37394194
+    class_weighting: 1.15946967
+    class_weighting: 1.0
+    class_weighting: 3.20875891
+  }
+}
+layer {
+  name: "accuracy"
+  type: "Accuracy"
+  bottom: "dense_softmax_inner_prod"
+  bottom: "label"
+  top: "accuracy"
+  top: "per_class_accuracy"
 }
