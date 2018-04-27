@@ -178,7 +178,7 @@ def save_images_inferences(image_locs, model, weights, image_prefix, gpu):
     caffe.set_mode_gpu()
 
     # Load Caffe network
-    net = caffe.Net(model, weights, caffe.TEST)
+    net = caffe.Net(str(model), str(weights), caffe.TEST)
 
     # Access blob data
     input_shape = net.blobs['data'].data.shape

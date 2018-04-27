@@ -17,6 +17,7 @@ from google.protobuf import text_format
 
 from inference import bayesian_segnet_inference
 
+
 class StreamTee(object):
     """
     Class that allows streaming to console and to a log file at the same time. Instantiate class with the two
@@ -184,7 +185,7 @@ def wait_and_test_snapshots(snapshot_dir, training_model, test_model, test_image
     notifier.loop()
 
 
-def train(run_inference, train_gpu, test_gpu, train_paths):
+def train(gpu, train_paths):
 
     # init
     caffe.set_device(train_gpu)
@@ -199,7 +200,7 @@ def train(run_inference, train_gpu, test_gpu, train_paths):
         # TODO(jskhu): Set log file
         with open(proto) as solver:
             text_format.Merge(str(solver.read()), solver_config)
-        train_weight_path = "{}_iter_{}.caffemodel".format(solver_config.snapshot_prefix, solver_config.max_iter)
+        train_weight_path = "{}_iter_{}_inf.caffemodel".format(solver_config.snapshot_prefix, solver_config.max_iter)
 
         # If the testing is run in parallel with training, a seperate process will be made which will run everytime
         # a new snapshot is created
@@ -231,18 +232,58 @@ def train(run_inference, train_gpu, test_gpu, train_paths):
         del solver
         # TODO(jskhu): Run entire validation set on trained network
 
+def train_network(gpu, train_path):
+    caffe.set_device(gpu)
+    caffe.set_mode_gpu()
+    proto, init_weight_path, inf_weight_path, solverstate, test_model, test_image, log_dir = train_path
+    # Get solver parameters
+    solver_config = caffe_pb2.SolverParameter()
+
+    # TODO(jskhu): Set log file
+    with open(proto) as solver:
+        text_format.Merge(str(solver.read()), solver_config)
+    train_weight_path = "{}_iter_{}.caffemodel".format(solver_config.snapshot_prefix, solver_config.max_iter)
+
+    # If the testing is run in parallel with training, a seperate process will be made which will run everytime
+    # a new snapshot is created
+
+    solver = caffe.SGDSolver(str(proto))
+
+    # initialize weights if given
+    if solverstate:
+        solver.restore(solverstate)
+    elif init_weight_path:
+        solver.net.copy_from(init_weight_path)
+
+    # Train until completion, remove solver to free up GPU, and compute mean and variance for the batch norm layers
+    solver.solve()
+
+    print "Training complete"
+
+    compute_bn_statistics(solver_config.net, train_weight_path, inf_weight_path)
+    del solver
+    # TODO(jskhu): Run entire validation set on trained network
+
+
 
 if __name__ == "__main__":
     run_inference, train_gpu, test_gpu, train_paths = get_args()
+    for train_path in train_paths:
+        print train_path
+        proto, init_weight_path, inf_weight_path, solverstate, test_model, test_image, log_dir = train_path
+        train_process = Process(target=train_network, args=(train_gpu, train_path))
+        if run_inference:
+            solver_config = caffe_pb2.SolverParameter()
+            with open(proto) as solver:
+                text_format.Merge(str(solver.read()), solver_config)
+            snapshot_dir = '/'.join(solver_config.snapshot_prefix.split('/')[0:-1])
+            test_snapshot_process = Process(target=wait_and_test_snapshots, args=(snapshot_dir, solver_config.net, test_model, test_image, log_dir, test_gpu))
+            test_snapshot_process.start()
 
-    # logfile = file("blah.txt", "w+")
-    # sys.stdout = StreamTee(sys.stdout, logfile)
-    # # notifier.loop()
-    # print 'hi'
-    # print 'hello'
-    # logfile = file("blah2.txt", "w+")
-    # sys.stdout.stream2 = logfile
-    # print 'sup'
-    # print 'morning'
+        train_process.start()
+        train_process.join()
+        # TODO(jskhu): Currently testing process dies as soon as training is completed. Find a way to either wait
+        # for the testing to complete, or gracefully shut it down
+        if run_inference:
+            test_snapshot_process.terminate()
 
-    train(run_inference, train_gpu, test_gpu, train_paths)
