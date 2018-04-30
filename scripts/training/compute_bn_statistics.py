@@ -4,27 +4,27 @@ import numpy as np
 from skimage.io import ImageCollection
 from argparse import ArgumentParser
 
-
-
-
-caffe_root = '/home/pganti/git/caffe-segnet-cudnn7/' 			# Change this to the absolute directoy to SegNet Caffe
-import sys
-sys.path.insert(0, caffe_root + 'python')
-
 import caffe
 from caffe.proto import caffe_pb2
 from google.protobuf import text_format
 
 
-def extract_dataset(net_message):
-    assert net_message.layer[0].type == "DenseImageData"
-    source = net_message.layer[0].dense_image_data_param.source
-    with open(source) as f:
-        data = f.read().split()
-    ims = ImageCollection(data[::2])
-    labs = ImageCollection(data[1::2])
-    assert len(ims) == len(labs) > 0
-    return ims, labs
+def extract_datasets(net_message, params):
+    assert net_message.layer[0].type == "Python"
+    sources = [os.path.expanduser(data_dir) for data_dir in params['data_dirs'].split(",")]
+    split = params['split']
+    imgs = []
+    labs = []
+
+    # extract each dataset
+    for source in sources:
+        with open("{}/{}.txt".format(source, split), "r") as paths:
+            data = paths.read().split()
+        imgs.append(ImageCollection(data[::2]))
+        labs.append(ImageCollection(data[1::2]))
+        assert len(imgs[-1]) == len(labs[-1]) > 0
+
+    return imgs, labs
 
 
 def make_testable(train_model_path):
@@ -56,27 +56,27 @@ def make_test_files(testable_net_path, train_weights_path, num_iterations,
         testable_str = f.read()
     testable_msg = caffe_pb2.NetParameter()
     text_format.Merge(testable_str, testable_msg)
-    
+
     bn_layers = [l.name for l in testable_msg.layer if l.type == "BN"]
     bn_blobs = [l.top[0] for l in testable_msg.layer if l.type == "BN"]
     bn_means = [l.top[1] for l in testable_msg.layer if l.type == "BN"]
     bn_vars = [l.top[2] for l in testable_msg.layer if l.type == "BN"]
 
-    net = caffe.Net(testable_net_path, train_weights_path, caffe.TEST)
-    
+    net = caffe.Net(str(testable_net_path), str(train_weights_path), caffe.TEST)
+
     # init our blob stores with the first forward pass
     res = net.forward()
     bn_avg_mean = {bn_mean: np.squeeze(res[bn_mean]).copy() for bn_mean in bn_means}
     bn_avg_var = {bn_var: np.squeeze(res[bn_var]).copy() for bn_var in bn_vars}
 
     # iterate over the rest of the training set
-    for i in xrange(1, num_iterations):
+    for i in range(1, num_iterations):
         res = net.forward()
         for bn_mean in bn_means:
             bn_avg_mean[bn_mean] += np.squeeze(res[bn_mean])
         for bn_var in bn_vars:
             bn_avg_var[bn_var] += np.squeeze(res[bn_var])
-        print 'progress: {}/{}'.format(i, num_iterations)
+        print('progress: {}/{}'.format(i, num_iterations))
 
     # compute average means and vars
     for bn_mean in bn_means:
@@ -107,9 +107,9 @@ def make_test_files(testable_net_path, train_weights_path, num_iterations,
 
         new_scale_data[bn_layer] = new_gamma
         new_shift_data[bn_layer] = new_beta
-    print "New data:"
-    print new_scale_data.keys()
-    print new_shift_data.keys()
+    print("New data:")
+    print(new_scale_data.keys())
+    print(new_shift_data.keys())
 
     # assign computed new scale and shift values to net.params
     for bn_layer in bn_layers:
@@ -119,7 +119,7 @@ def make_test_files(testable_net_path, train_weights_path, num_iterations,
         net.params[bn_layer][1].data[...] = new_shift_data[bn_layer].reshape(
             net.params[bn_layer][1].data.shape
         )
-        
+
     # build a test net prototxt
     test_msg = testable_msg
     # replace data layers with 'input' net param
@@ -156,42 +156,45 @@ def make_parser():
     p.add_argument('train_model')
     p.add_argument('weights')
     p.add_argument('out_dir')
+    p.add_argument('gpu_id')
     return p
 
 
-if __name__ == '__main__':
-    caffe.set_mode_gpu()
-    p = make_parser()
-    args = p.parse_args()
-
+def compute_bn_statistics(train_model, weights, out_path):
     # build and save testable net
-    if not os.path.exists(args.out_dir):
-        os.makedirs(args.out_dir)
-    print "Building BN calc net..."
-    testable_msg = make_testable(args.train_model)
+    out_dir = os.path.dirname(out_path)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    print("Building BN calc net...")
+    testable_msg = make_testable(train_model)
     BN_calc_path = os.path.join(
-        args.out_dir, '__for_calculating_BN_stats_' + os.path.basename(args.train_model)
+        out_dir, '__for_calculating_BN_stats_' + os.path.basename(train_model)
     )
     with open(BN_calc_path, 'w') as f:
         f.write(text_format.MessageToString(testable_msg))
 
-    # use testable net to calculate BN layer stats
-    print "Calculate BN stats..."
-    train_ims, train_labs = extract_dataset(testable_msg)
-    train_size = len(train_ims)
-    minibatch_size = testable_msg.layer[0].dense_image_data_param.batch_size
-    num_iterations = train_size // minibatch_size + train_size % minibatch_size
-    in_h, in_w =(360, 480)
-    test_net, test_msg = make_test_files(BN_calc_path, args.weights, num_iterations,
+    # use testable net to get parameters
+    print("Calculate BN stats...")
+    params = eval(testable_msg.layer[0].python_param.param_str)
+    train_ims, train_labs = extract_datasets(testable_msg, params)
+    num_datasets = len(train_ims)
+    largest_train_size = max(len(dataset) for dataset in train_ims)
+    minibatch_size = params['batch_size']
+
+    # calculate BN stats based on parameters
+    numerator = largest_train_size * num_datasets
+    num_iterations = numerator // minibatch_size + (numerator % minibatch_size > 0)
+    in_h, in_w =(512, 1024)
+    test_net, test_msg = make_test_files(BN_calc_path, weights, num_iterations,
                                          in_h, in_w)
-    
+
     # save deploy prototxt
-    #print "Saving deployment prototext file..."
-    #test_path = os.path.join(args.out_dir, "deploy.prototxt")
+    #print("Saving deployment prototext file...")
+    #test_path = os.path.join(out_dir, "deploy.prototxt")
     #with open(test_path, 'w') as f:
     #    f.write(text_format.MessageToString(test_msg))
-    
-    print "Saving test net weights..."
-    test_net.save(os.path.join(args.out_dir, "test_weights.caffemodel"))
-    print "done"
+
+    print("Saving test net weights...")
+    test_net.save(str(out_path))
+    print("done")
 

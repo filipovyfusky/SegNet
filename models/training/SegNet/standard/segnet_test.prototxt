@@ -5,7 +5,7 @@ layer {
   top: "data"
   top: "label"
   dense_image_data_param {
-    source: "/SegNet/CamVid/test.txt"	# Change this to the absolute path to your data file
+    source: "/home/wave/SegNet/datasets/dataset_1/test.txt"	# Change this to the absolute path to your data file
     batch_size: 1
   }
 }
@@ -805,8 +805,6 @@ layer {
   bottom: "pool5_mask"
   upsample_param {
     scale: 2
-    upsample_w: 30
-    upsample_h: 23
   }
 }
 layer {
@@ -986,8 +984,6 @@ layer {
   bottom: "pool4_mask"
   upsample_param {
     scale: 2
-    upsample_w: 60
-    upsample_h: 45
   }
 }
 layer {
@@ -1544,7 +1540,7 @@ layer {
     bias_filler {
       type: "constant"
     }
-    num_output: 11
+    num_output: 14
     pad: 1
     kernel_size: 3
   }

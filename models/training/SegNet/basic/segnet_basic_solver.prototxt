@@ -6,10 +6,10 @@ base_lr: 0.1
 lr_policy: "step"
 gamma: 1.0
 stepsize: 10000000
-display: 20
+display: 1
 momentum: 0.9
-max_iter: 10000
+max_iter: 5
 weight_decay: 0.0005
-snapshot: 1000
+snapshot: 10
 snapshot_prefix: "/SegNet/Models/Training/segnet_basic"  	# Change this to the absolute path to where you wish to output solver snapshots
 solver_mode: GPU

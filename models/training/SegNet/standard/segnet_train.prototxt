@@ -1,13 +1,13 @@
 name: "VGG_ILSVRC_16_layer"
 layer {
   name: "data"
-  type: "DenseImageData"
+  type: "Python"
   top: "data"
   top: "label"
-  dense_image_data_param {
-    source: "/home/pganti/git/SegNet/data/CamVid/train.txt"	# Change this to the absolute path to your data file
-    batch_size: 4   			# Change this number to a batch size that will fit on your GPU
-    shuffle: true
+  python_param {
+    module: "segnet_data_layers"
+    layer: "SegNetSegDataLayer"
+    param_str: "{\'data_dirs\': \'~/wave/SegNet/datasets/dataset_1', \'data_proportions\': [0.25, 1], \'batch_size\': 2, \'split\': \'train\', \'seed\': 1337}"
   }
 }
 layer {
@@ -793,8 +793,6 @@ layer {
   bottom: "pool5_mask"
   upsample_param {
     scale: 2
-    upsample_w: 30
-    upsample_h: 23
   }
 }
 layer {
@@ -971,8 +969,6 @@ layer {
   bottom: "pool4_mask"
   upsample_param {
     scale: 2
-    upsample_w: 60
-    upsample_h: 45
   }
 }
 layer {
@@ -1520,7 +1516,7 @@ layer {
     bias_filler {
       type: "constant"
     }
-    num_output: 11
+    num_output: 14
     pad: 1
     kernel_size: 3
   }
@@ -1534,18 +1530,20 @@ layer {
   softmax_param {engine: CAFFE}
   loss_param: {
     weight_by_label_freqs: true
-    ignore_label: 11
-    class_weighting: 0.2595
-    class_weighting: 0.1826
-    class_weighting: 4.5640
-    class_weighting: 0.1417
-    class_weighting: 0.9051
-    class_weighting: 0.3826
-    class_weighting: 9.6446
-    class_weighting: 1.8418
-    class_weighting: 0.6823
-    class_weighting: 6.2478
-    class_weighting: 7.3614
+    class_weighting: 1.0
+    class_weighting: 0.10169063
+    class_weighting: 0.58997084
+    class_weighting: 0.16465405
+    class_weighting: 1.38359322
+    class_weighting: 3.07371258
+    class_weighting: 10.1822645
+    class_weighting: 6.50008863
+    class_weighting: 0.23271536
+    class_weighting: 1.82312816
+    class_weighting: 0.86178642
+    class_weighting: 2.36359412
+    class_weighting: 0.51697915
+    class_weighting: 4.52888206
   }
 }
 layer {
