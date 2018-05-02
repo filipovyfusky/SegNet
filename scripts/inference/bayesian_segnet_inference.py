@@ -6,28 +6,32 @@ import time
 import caffe
 
 # Use colours which match Cityscapes
-# (180, 129, 69)  # 0 - Sky
-# (69, 69, 69)    # 1 - Building
-# (153, 153, 153) # 2 - Column/Pole
-# (128, 64, 128)  # 3 - Road
-# (231, 35, 244)  # 4 - Sidewalk
-# (35, 142, 106)  # 5 - Tree
-# (29, 170, 250)  # 6 - SignSymbol
-# (153, 153, 190) # 7 - Fence
-# (142, 0 , 0)    # 8 - Car
-# (60, 19, 219)   # 9 - Pedestrian
-# (32, 10, 119)   # 10 - Cyclist
-# TODO(jskhu): Fix up label names
-LABEL_COLOURS = np.array([[32, 10, 119], [128, 64, 128], [231, 35, 244], [69, 69, 69]
-                # -1= ground 0 = road, 1 = sidewalk, 2 = building
-                ,[156, 102, 102], [153, 153, 190], [153, 153, 153]
-                # 3 = wall, 4 = fence, 5 = pole
-                ,[29, 170, 250], [0, 219, 219], [35, 142, 106]
-                # 6 = traffic light, 7 = traffic sign, 8 = vegetation
-                ,[152, 250, 152], [180, 129, 69], [60, 19, 219]
-                # 9 = terrain, 10 = sky, 11 = person
-                , [142, 0, 0], [69, 0, 0], [100, 60, 0]])
-                # 12 = rider, 13 = car, 14 = truck
+# (128, 64, 128)  # 0  - Road
+# (232, 35, 244)  # 1  - Sidewalk
+# (69, 69, 69)    # 2  - Building
+# (156, 102, 102) # 3  - Wall/Fence
+# (153, 153, 153) # 4  - Pole
+# (30, 170, 250)  # 5  - Traffic Light
+# (0, 220, 220)   # 6  - Traffic Sign
+# (35, 142, 107)  # 7  - Vegetation
+# (152, 251, 152) # 8  - Terrain
+# (180, 130, 70)  # 9 -  Sky
+# (60, 20, 220)   # 10 - Person/Rider
+# (142, 0, 0)     # 11 - Car
+# (70, 0, 0)      # 12 - Truck
+# (100, 60, 0)    # 13 - Bus
+# (32, 11, 119)   # 14 - Bicycle/Motorcycle
+
+LABEL_COLOURS = np.array([[128, 64, 128], [232, 35, 244], [69, 69, 69],
+                          # 0 = road,     1 = sidewalk,   2 = building
+                          [156, 102, 102], [153, 153, 153], [30, 170, 250],
+                          # 3 = Wall/Fence, 4 = Pole,       5 = Traffic Light
+                          [0, 220, 220],      [35, 142, 107], [152, 251, 152],
+                          # 6 = Traffic Sign, 7 = vegetation, 8 = terrain,
+                          [180, 130, 70], [60, 20, 220],   [142, 0, 0],
+                          #  9 = sky, 10 = person / Rider, 11 = Car
+                          [70, 0, 0],   [100, 60, 0], [32, 11, 119]])
+                          # 12 = Truck, 13 = Bus,     14 = Bicycle/Motorcycle
 
 
 def overlay_segmentation_results(input_image, segmented_image):
@@ -158,8 +162,16 @@ def save_video_inference(input_source, model, weights, image_prefix, gpu):
     while more_images:
         more_images, frame = cap.read()
         if more_images:
-            segmented_image, confidence, normalized_uncertainty = run_inference(net, frame, input_shape, confidence_output)
-            save_image(segmented_image, confidence, normalized_uncertainty, '{}_{}'.format(image_prefix, count))
+            segmented_image, confidence, variance = run_inference(net, frame, input_shape, confidence_output)
+
+            # Convert confidence and normalized_uncertainty to CV_8UC1 for saving image
+            confidence = confidence * 255
+            variance = variance * 255
+
+            confidence = np.uint8(confidence)
+            variance = np.uint8(variance)
+
+            save_image(segmented_image, confidence, variance, '{}_{}'.format(image_prefix, count))
             count += 1
 
 

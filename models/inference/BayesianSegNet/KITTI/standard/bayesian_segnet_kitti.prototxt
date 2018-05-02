@@ -1627,64 +1627,7 @@ layer {
       type: "constant"
       value: 0
     }
-    num_output: 64
-    pad: 1
-    kernel_size: 3
-  }
-}
-layer {
-  bottom: "conv1_1_D"
-  top: "conv1_1_D"
-  name: "conv1_1_D_bn"
-  type: "BN"
-  param {
-    lr_mult: 1
-    decay_mult: 1
-  }
-  param {
-    lr_mult: 1
-    decay_mult: 0
-  }
-  bn_param {
-	bn_mode: INFERENCE
-	scale_filler {
-	  type: "constant"
-	  value: 1
-	}
-	shift_filler {
-	  type: "constant"
-	  value: 0
-	}
- }
-}
-layer {
-  bottom: "conv1_1_D"
-  top: "conv1_1_D"
-  name: "relu1_1_D"
-  type: "ReLU"
-}
-layer {
-  bottom: "conv1_1_D"
-  top: "camvid"
-  name: "camvid"
-  type: "Convolution"
-  param {
-    lr_mult: 1
-    decay_mult: 1
-  }
-  param {
-    lr_mult: 2
-    decay_mult: 0
-  }
-  convolution_param {
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-      value: 0
-    }
-    num_output: 11
+    num_output: 16
     pad: 1
     kernel_size: 3
   }
