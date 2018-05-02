@@ -190,7 +190,7 @@ def train(gpu, train_paths):
     # init
     caffe.set_device(train_gpu)
     caffe.set_mode_gpu()
-    temp_out = file('/home/jskhu/tmp.txt', 'w+')
+    temp_out = file('~/tmp.txt', 'w+')
     sys.stdout = StreamTee(sys.stdout, temp_out)
 
     for proto, init_weight_path, inf_weight_path, solverstate, test_model, test_image, log_dir in train_paths:
