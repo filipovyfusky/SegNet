@@ -4,7 +4,6 @@ import random
 import caffe
 import numpy as np
 import cv2
-import scipy.io
 
 
 class SegNetSegDataLayer(caffe.Layer):
