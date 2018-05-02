@@ -1,4 +1,4 @@
-name: "VGG_ILSVRC_16_layer"
+name: "bayesian_segnet_basic_train"
 layer {
   name: "data"
   type: "Python"
@@ -7,7 +7,7 @@ layer {
   python_param {
     module: "segnet_data_layers"
     layer: "SegNetSegDataLayer"
-    param_str: "{\'data_dirs\': \'~/wave/SegNet/datasets/dataset_1', \'data_proportions\': [0.25], \'batch_size\': 3, \'split\': \'train\', \'seed\': 1337}"
+    param_str: "{\'data_dirs\': \'/PATH/TO/DATASET', \'data_proportions\': [0.25], \'batch_size\': 3, \'split\': \'train\', \'seed\': 1337}"
   }
 }
 layer {

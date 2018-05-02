@@ -1,9 +1,9 @@
 name: "segnet"
 input: "data"
-input_dim: 1 # Set this to your sample size
+input_dim: 8 # Set this to your sample size
 input_dim: 3
-input_dim: 384
-input_dim: 1024
+input_dim: 360
+input_dim: 480
 layer {
   name: "norm"
   type: "LRN"

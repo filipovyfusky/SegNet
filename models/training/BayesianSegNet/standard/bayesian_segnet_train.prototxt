@@ -1,11 +1,11 @@
-name: "VGG_ILSVRC_16_layer"
+name: "bayesian_segnet_train"
 layer {
   name: "data"
   type: "DenseImageData"
   top: "data"
   top: "label"
   dense_image_data_param {
-    source: "/home/pganti/git/SegNet/data/CamVid/train.txt"	# Change this to the absolute path to your data file
+    source: "/PATH/TO/DATASET.txt"	# Change this to the absolute path to your data file
     batch_size: 4   			# Change this number to a batch size that will fit on your GPU
     shuffle: true
   }

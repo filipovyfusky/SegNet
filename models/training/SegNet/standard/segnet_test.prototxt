@@ -1,11 +1,11 @@
-name: "VGG_ILSVRC_16_layer"
+name: "segnet_test"
 layer {
   name: "data"
   type: "DenseImageData"
   top: "data"
   top: "label"
   dense_image_data_param {
-    source: "/home/wave/SegNet/datasets/dataset_1/test.txt"	# Change this to the absolute path to your data file
+    source: "/PATH/TO/DATASET.txt"	# Change this to the absolute path to your data file
     batch_size: 1
   }
 }

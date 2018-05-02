@@ -16,9 +16,9 @@ TXT_PATH:
 
 """
 IMG_PATH = [
-    os.path.expanduser("~/datasets/cityscapes/leftImg8bit/train/*/*.png"),
-    os.path.expanduser("~/datasets/cityscapes/gtFine/train/*/*gtFine_labelTrainIds.png")]
-OUT_PATH = os.path.expanduser("~/wave/SegNet/datasets/dataset_1/")
+    os.path.expanduser("/PATH/TO/cityscapes/leftImg8bit/train/*/*.png"),
+    os.path.expanduser("/PATH/TO/cityscapes/gtFine/train/*/*gtFine_labelTrainIds.png")]
+OUT_PATH = os.path.expanduser("/PATH/TO/SegNet/datasets/dataset_1/")
 DATA_TYPE = "train"
 TXT_PATH = ""
 RESIZE_IMGS = True

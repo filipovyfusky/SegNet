@@ -5,9 +5,9 @@ import argparse
 import configparser
 from multiprocessing import Process
 import pyinotify
-sys.path.insert(0, os.path.expanduser("~/wave/caffe-segnet-cudnn7/python")) # Might not need this if you add to $PATH from ~/.bashrc
-sys.path.insert(0, os.path.expanduser("~/wave/SegNet/custom_layers"))
-sys.path.insert(0, os.path.expanduser("~/wave/SegNet/scripts"))
+sys.path.insert(0, os.path.expanduser("/PATH/TO/SegNet/caffe-segnet-cudnn7/python")) # Might not need this if you add to $PATH from ~/.bashrc
+sys.path.insert(0, os.path.expanduser("/PATH/TO/SegNet/custom_layers"))
+sys.path.insert(0, os.path.expanduser("/PATH/TO/SegNet/scripts"))
 
 import caffe
 import numpy as np

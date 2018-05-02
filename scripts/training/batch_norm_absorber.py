@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-After SegNet has been trained, run compute_bn_statistics.py script and then BN-absorber.py.
+After SegNet has been trained, run compute_bn_statistics.py script and then batch_norm_absorber.py.
 
 For inference batch normalization layer can be merged into convolutional kernels, to
 speed up the network. Both layers applies a linear transformation. For that reason

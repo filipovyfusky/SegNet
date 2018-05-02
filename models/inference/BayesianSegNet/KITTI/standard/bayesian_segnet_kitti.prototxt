@@ -1,14 +1,10 @@
-name: "segnet_train"
-layer {
-  name: "data"
-  type: "Python"
-  top: "data"
-  top: "label"
-  python_param {
-    module: "segnet_data_layers"
-    layer: "SegNetSegDataLayer"
-    param_str: "{\'data_dirs\': \'/PATH/TO/DATASET', \'data_proportions\': [0.25, 1], \'batch_size\': 2, \'split\': \'train\', \'seed\': 1337}"
-  }
+name: "bayesian_segnet"
+input: "data"
+input_shape {
+  dim: 2 # Set this to your sample size
+  dim: 3
+  dim: 352
+  dim: 1024
 }
 layer {
   bottom: "data"
@@ -25,10 +21,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 64
     pad: 1
@@ -49,13 +46,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -80,10 +78,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 64
     pad: 1
@@ -104,13 +103,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -147,10 +147,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 128
     pad: 1
@@ -171,13 +172,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -202,10 +204,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 128
     pad: 1
@@ -226,13 +229,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -269,10 +273,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 256
     pad: 1
@@ -293,13 +298,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -324,10 +330,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 256
     pad: 1
@@ -348,13 +355,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -379,10 +387,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 256
     pad: 1
@@ -403,13 +412,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -432,6 +442,16 @@ layer {
   }
 }
 layer {
+  name: "pool3_drop"
+  type: "Dropout"
+  bottom: "pool3"
+  top: "pool3"
+  dropout_param {
+    sample_weights_test: true
+    dropout_ratio: 0.5
+  }
+}
+layer {
   bottom: "pool3"
   top: "conv4_1"
   name: "conv4_1"
@@ -446,10 +466,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 512
     pad: 1
@@ -470,13 +491,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -501,10 +523,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 512
     pad: 1
@@ -525,13 +548,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -556,10 +580,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 512
     pad: 1
@@ -580,13 +605,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -609,6 +635,16 @@ layer {
   }
 }
 layer {
+  name: "pool4_drop"
+  type: "Dropout"
+  bottom: "pool4"
+  top: "pool4"
+  dropout_param {
+    sample_weights_test: true
+    dropout_ratio: 0.5
+  }
+}
+layer {
   bottom: "pool4"
   top: "conv5_1"
   name: "conv5_1"
@@ -623,10 +659,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 512
     pad: 1
@@ -647,13 +684,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -678,10 +716,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 512
     pad: 1
@@ -702,13 +741,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -733,10 +773,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 512
     pad: 1
@@ -757,13 +798,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -786,6 +828,16 @@ layer {
   }
 }
 layer {
+  name: "pool5_drop"
+  type: "Dropout"
+  bottom: "pool5"
+  top: "pool5"
+  dropout_param {
+    sample_weights_test: true
+    dropout_ratio: 0.5
+  }
+}
+layer {
   name: "upsample5"
   type: "Upsample"
   bottom: "pool5"
@@ -793,6 +845,8 @@ layer {
   bottom: "pool5_mask"
   upsample_param {
     scale: 2
+    upsample_w: 30
+    upsample_h: 23
   }
 }
 layer {
@@ -810,10 +864,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 512
     pad: 1
@@ -834,13 +889,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -866,10 +922,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 512
     pad: 1
@@ -890,13 +947,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -921,10 +979,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 512
     pad: 1
@@ -945,13 +1004,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -962,6 +1022,16 @@ layer {
   type: "ReLU"
 }
 layer {
+  name: "upsample4_drop"
+  type: "Dropout"
+  bottom: "conv5_1_D"
+  top: "conv5_1_D"
+  dropout_param {
+    sample_weights_test: true
+    dropout_ratio: 0.5
+  }
+}
+layer {
   name: "upsample4"
   type: "Upsample"
   bottom: "conv5_1_D"
@@ -969,6 +1039,8 @@ layer {
   bottom: "pool4_mask"
   upsample_param {
     scale: 2
+    upsample_w: 60
+    upsample_h: 45
   }
 }
 layer {
@@ -986,10 +1058,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 512
     pad: 1
@@ -1010,13 +1083,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -1041,10 +1115,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 512
     pad: 1
@@ -1065,13 +1140,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -1096,10 +1172,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 256
     pad: 1
@@ -1120,13 +1197,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -1135,6 +1213,16 @@ layer {
   top: "conv4_1_D"
   name: "relu4_1_D"
   type: "ReLU"
+}
+layer {
+  name: "upsample3_drop"
+  type: "Dropout"
+  bottom: "conv4_1_D"
+  top: "conv4_1_D"
+  dropout_param {
+    sample_weights_test: true
+    dropout_ratio: 0.5
+  }
 }
 layer {
   name: "upsample3"
@@ -1161,10 +1249,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 256
     pad: 1
@@ -1185,13 +1274,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -1216,10 +1306,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 256
     pad: 1
@@ -1240,13 +1331,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -1271,10 +1363,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 128
     pad: 1
@@ -1295,13 +1388,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -1310,6 +1404,16 @@ layer {
   top: "conv3_1_D"
   name: "relu3_1_D"
   type: "ReLU"
+}
+layer {
+  name: "upsample2_drop"
+  type: "Dropout"
+  bottom: "conv3_1_D"
+  top: "conv3_1_D"
+  dropout_param {
+    sample_weights_test: true
+    dropout_ratio: 0.5
+  }
 }
 layer {
   name: "upsample2"
@@ -1336,10 +1440,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 128
     pad: 1
@@ -1360,13 +1465,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -1391,10 +1497,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 64
     pad: 1
@@ -1415,13 +1522,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -1456,10 +1564,11 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
     num_output: 64
     pad: 1
@@ -1480,13 +1589,14 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0.001
+	  value: 0
 	}
  }
 }
@@ -1511,46 +1621,78 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
+      value: 0
     }
-    num_output: 14
+    num_output: 64
     pad: 1
     kernel_size: 3
   }
 }
 layer {
-  name: "loss"
-  type: "SoftmaxWithLoss"
   bottom: "conv1_1_D"
-  bottom: "label"
-  top: "loss"
-  softmax_param {engine: CAFFE}
-  loss_param: {
-    weight_by_label_freqs: true
-    class_weighting: 1.0
-    class_weighting: 0.10169063
-    class_weighting: 0.58997084
-    class_weighting: 0.16465405
-    class_weighting: 1.38359322
-    class_weighting: 3.07371258
-    class_weighting: 10.1822645
-    class_weighting: 6.50008863
-    class_weighting: 0.23271536
-    class_weighting: 1.82312816
-    class_weighting: 0.86178642
-    class_weighting: 2.36359412
-    class_weighting: 0.51697915
-    class_weighting: 4.52888206
+  top: "conv1_1_D"
+  name: "conv1_1_D_bn"
+  type: "BN"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 1
+    decay_mult: 0
+  }
+  bn_param {
+	bn_mode: INFERENCE
+	scale_filler {
+	  type: "constant"
+	  value: 1
+	}
+	shift_filler {
+	  type: "constant"
+	  value: 0
+	}
+ }
+}
+layer {
+  bottom: "conv1_1_D"
+  top: "conv1_1_D"
+  name: "relu1_1_D"
+  type: "ReLU"
+}
+layer {
+  bottom: "conv1_1_D"
+  top: "camvid"
+  name: "camvid"
+  type: "Convolution"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    num_output: 11
+    pad: 1
+    kernel_size: 3
   }
 }
 layer {
-  name: "accuracy"
-  type: "Accuracy"
-  bottom: "conv1_1_D"
-  bottom: "label"
-  top: "accuracy"
-  top: "per_class_accuracy"
+  name: "prob"
+  type: "Softmax"
+  bottom: "camvid"
+  top: "prob"
+  softmax_param {engine: CAFFE}
 }
