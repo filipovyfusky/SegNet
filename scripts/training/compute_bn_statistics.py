@@ -9,20 +9,17 @@ from caffe.proto import caffe_pb2
 from google.protobuf import text_format
 
 
-def extract_datasets(net_message, params):
-    assert net_message.layer[0].type == "Python"
-    sources = [os.path.expanduser(data_dir) for data_dir in params['data_dirs'].split(",")]
-    split = params['split']
-    imgs = []
-    labs = []
+def extract_dataset(net_message, params):
+    assert net_message.layer[0].type == "DenseImageData"
+    source = net_message.layer[0].dense_image_data_param.source
 
-    # extract each dataset
-    for source in sources:
-        with open("{}/{}.txt".format(source, split), "r") as paths:
-            data = paths.read().split()
-        imgs.append(ImageCollection(data[::2]))
-        labs.append(ImageCollection(data[1::2]))
-        assert len(imgs[-1]) == len(labs[-1]) > 0
+    with open(source) as f:
+        data = f.read().split()
+
+    imgs = ImageCollection(data[::2])
+    labs = ImageCollection(data[1::2])
+
+    assert len(imgs) == len(labs) > 0
 
     return imgs, labs
 
@@ -176,7 +173,7 @@ def compute_bn_statistics(train_model, weights, out_path):
     # use testable net to get parameters
     print("Calculate BN stats...")
     params = eval(testable_msg.layer[0].python_param.param_str)
-    train_ims, train_labs = extract_datasets(testable_msg, params)
+    train_ims, train_labs = extract_dataset(testable_msg, params)
     num_datasets = len(train_ims)
     largest_train_size = max(len(dataset) for dataset in train_ims)
     minibatch_size = params['batch_size']
@@ -187,12 +184,6 @@ def compute_bn_statistics(train_model, weights, out_path):
     in_h, in_w =(512, 1024)
     test_net, test_msg = make_test_files(BN_calc_path, weights, num_iterations,
                                          in_h, in_w)
-
-    # save deploy prototxt
-    #print("Saving deployment prototext file...")
-    #test_path = os.path.join(out_dir, "deploy.prototxt")
-    #with open(test_path, 'w') as f:
-    #    f.write(text_format.MessageToString(test_msg))
 
     print("Saving test net weights...")
     test_net.save(str(out_path))
