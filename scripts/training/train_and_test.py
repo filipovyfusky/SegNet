@@ -176,7 +176,7 @@ def get_args():
     assert len(solvers) == len(log_dirs), "number of solver and log_dirs mismatch"
     assert len(test_shape) == 4, "test_shape must have a shape of 4"
 
-    return (args.run_inference, args.train_gpu, args.test_gpu, zip(solvers, init_weights, inf_weights, solverstates, test_models, test_images, log_dirs, test_shape))
+    return (args.run_inference, args.train_gpu, args.test_gpu, zip(solvers, init_weights, inf_weights, solverstates, test_models, test_images, log_dirs), test_shape)
 
 
 def train(gpu, train_paths):
@@ -260,10 +260,11 @@ def train_network(gpu, train_path):
 
 
 if __name__ == "__main__":
-    run_inference, train_gpu, test_gpu, train_paths = get_args()
+    run_inference, train_gpu, test_gpu, train_paths, test_shape = get_args()
     for train_path in train_paths:
         print train_path
-        proto, init_weight_path, inf_weight_path, solverstate, test_model, test_images, log_dir, test_shape = train_path
+        proto, init_weight_path, inf_weight_path, solverstate, test_model, test_images, log_dir = train_path
+        print(test_shape)
 
         train_process = Process(target=train_network, args=(train_gpu, train_path))
         if run_inference:
