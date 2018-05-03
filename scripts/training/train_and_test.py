@@ -147,6 +147,9 @@ def get_args():
     log_dirs = [os.path.expanduser(log_dir) for log_dir in config["Log_Dirs"].values()]
     test_shape = [os.path.expanduser(test_shape) for test_shape in config["Test_Shape"].values()]
 
+    # Convert test_shape to a list of integers
+    test_shape = [int(x) for x in test_shape[0].split(",")]
+
     # verify parameters are correct
     for solver, init_weight, solverstate, test_model, test_image, log_dir in zip(solvers, init_weights, solverstates, test_models, test_images, log_dirs):
         assert os.path.exists(solver), "Cannot find {}".format(solver)
@@ -171,6 +174,7 @@ def get_args():
     assert len(solvers) == len(test_models), "number of solver and test_models mismatch"
     assert len(solvers) == len(test_images), "number of solver and test_images mismatch"
     assert len(solvers) == len(log_dirs), "number of solver and log_dirs mismatch"
+    assert len(test_shape) == 4, "test_shape must have a shape of 4"
 
     return (args.run_inference, args.train_gpu, args.test_gpu, zip(solvers, init_weights, inf_weights, solverstates, test_models, test_images, log_dirs, test_shape))
 
@@ -260,7 +264,6 @@ if __name__ == "__main__":
     for train_path in train_paths:
         print train_path
         proto, init_weight_path, inf_weight_path, solverstate, test_model, test_images, log_dir, test_shape = train_path
-        print(test_shape)
 
         train_process = Process(target=train_network, args=(train_gpu, train_path))
         if run_inference:
