@@ -93,10 +93,22 @@ class SnapshotEventHandler(pyinotify.ProcessEvent):
         sys.stdout = log_file
         print 'Testing: {}'.format(event.pathname)
         # TODO(jskhu): Change this to be generic. Currently only works for Bayesian SegNet
+        random.shuffle(self.test_image_locs)
         image_locs = random.sample(self.test_image_locs, self.num_test_images)
         bayesian_segnet_inference.save_images_inferences(image_locs, self.test_model, inf_weight_path, image_prefix, self.gpu)
 
         sys.stdout = temp_stdout
+
+
+def wait_and_test_snapshots(snapshot_dir, training_model, test_model, test_image_file, log_dir, gpu):
+    wm = pyinotify.WatchManager()
+    handler = SnapshotEventHandler(training_model, test_model, test_image_file, log_dir, gpu)
+    notifier = pyinotify.Notifier(wm, handler)
+    mask = pyinotify.IN_CREATE
+    # rec=False stops recursive check to nested folder. ONLY checks changes in snapshot_dir
+    wdd = wm.add_watch(snapshot_dir, mask, rec=False)
+    notifier.loop()
+
 
 def get_args():
     """
@@ -116,7 +128,7 @@ def get_args():
     parser.add_argument("--config", default = "train_config.ini" ,
                         help="file path to train_config.ini file that lists solvers and weights to use")
 
-    args= parser.parse_args()
+    args = parser.parse_args()
     config = configparser.ConfigParser()
     config.read(args.config)
 
@@ -145,7 +157,6 @@ def get_args():
         assert os.path.exists(log_dir) or not log_dir, "Invalid path: {}".format(log_dir)
 
         # verify train net and val net prototxt parameters are correct
-        # verify_model_params(solver_config.net, "train")
         assert os.path.exists(init_weight) or init_weight in inf_weights or not init_weight, "Invalid path: {}".format(init_weight)
 
     assert len(solvers) == len(init_weights), "number of solver and initialization weight files mismatch"
@@ -157,36 +168,8 @@ def get_args():
 
     return (args.run_inference, args.train_gpu, args.test_gpu, zip(solvers, init_weights, inf_weights, solverstates, test_models, test_images, log_dirs))
 
-def verify_model_params(model, split):
-    net = caffe_pb2.NetParameter()
-    with open(model) as proto:
-        text_format.Merge(str(proto.read()), net)
-
-    params = eval(net.layer[0].python_param.param_str)
-    data_dirs = [os.path.expanduser(data_dir) for data_dir in params['data_dirs'].split(",")]
-    data_proportions = params['data_proportions']
-
-    for data_dir, data_proportion in zip(data_dirs, data_proportions):
-        assert os.path.exists("{}/{}.txt".format(data_dir, split)), "Invalid path:{}/{}.txt".format(data_dir, split)
-        assert data_proportion >= 0 and data_proportion <= 1, "Invalid data proportion: {} (Accepted range: 0-1)"
-
-    assert len(data_proportions) == len(data_dirs), "Invalid number of data proportions"
-    assert params['batch_size'], "Batch size not specified"
-    assert params['split'], "Data type (split) not specfied"
-
-
-def wait_and_test_snapshots(snapshot_dir, training_model, test_model, test_image_file, log_dir, gpu):
-    wm = pyinotify.WatchManager()
-    handler = SnapshotEventHandler(training_model, test_model, test_image_file, log_dir, gpu)
-    notifier = pyinotify.Notifier(wm, handler)
-    mask = pyinotify.IN_CREATE
-    # rec=False stops recursive check to nested folder. ONLY checks changes in snapshot_dir
-    wdd = wm.add_watch(snapshot_dir, mask, rec=False)
-    notifier.loop()
-
 
 def train(gpu, train_paths):
-
     # init
     caffe.set_device(train_gpu)
     caffe.set_mode_gpu()
@@ -232,6 +215,7 @@ def train(gpu, train_paths):
         del solver
         # TODO(jskhu): Run entire validation set on trained network
 
+
 def train_network(gpu, train_path):
     caffe.set_device(gpu)
     caffe.set_mode_gpu()
@@ -265,19 +249,24 @@ def train_network(gpu, train_path):
     # TODO(jskhu): Run entire validation set on trained network
 
 
-
 if __name__ == "__main__":
     run_inference, train_gpu, test_gpu, train_paths = get_args()
     for train_path in train_paths:
         print train_path
-        proto, init_weight_path, inf_weight_path, solverstate, test_model, test_image, log_dir = train_path
+        proto, init_weight_path, inf_weight_path, solverstate, test_model, test_images, log_dir = train_path
         train_process = Process(target=train_network, args=(train_gpu, train_path))
         if run_inference:
             solver_config = caffe_pb2.SolverParameter()
             with open(proto) as solver:
                 text_format.Merge(str(solver.read()), solver_config)
             snapshot_dir = '/'.join(solver_config.snapshot_prefix.split('/')[0:-1])
-            test_snapshot_process = Process(target=wait_and_test_snapshots, args=(snapshot_dir, solver_config.net, test_model, test_image, log_dir, test_gpu))
+            test_snapshot_process = Process(target=wait_and_test_snapshots,
+                                            args=(snapshot_dir,
+                                                  solver_config.net,
+                                                  test_model,
+                                                  test_images,
+                                                  log_dir,
+                                                  test_gpu))
             test_snapshot_process.start()
 
         train_process.start()

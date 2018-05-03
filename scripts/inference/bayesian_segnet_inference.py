@@ -68,6 +68,19 @@ def save_image(segmented_image, confidence, normalized_uncertainty, image_prefix
     cv2.imwrite('{}_variance.jpg'.format(image_prefix), normalized_uncertainty)
 
 
+def crop_input(input, shape):
+    """ target size for placeholder """
+    wt = shape[0]
+    ht = shape[1]
+    hs, ws, cs = input.shape
+    if ht == hs and wt == ws:
+        return input
+
+    x = (ws - wt) / 2
+    y = (hs - ht) / 2
+    return input[y:y + ht, x:x + wt]
+
+
 def run_inference(net, image, input_shape, confidence_output):
     """
     Runs through SegNet inference
@@ -80,7 +93,7 @@ def run_inference(net, image, input_shape, confidence_output):
 
     # Resize input image
     # Check if image and input image are the same shape, no need for resize
-    resized_image = cv2.resize(image, (input_shape[3], input_shape[2]))
+    resized_image = crop_input(image, (input_shape[3], input_shape[2]))
 
     # Input shape is (y, x, 3), needs to be reshaped to (3, y, x)
     input_image = resized_image.transpose((2, 0, 1))
@@ -257,7 +270,7 @@ if __name__ == "__main__":
             break
 
         # Resize input image
-        resized_image = cv2.resize(frame, (input_shape[3], input_shape[2]))
+        resized_image = crop_input(frame, (input_shape[3], input_shape[2]))
 
         # Input shape is (y, x, 3), needs to be reshaped to (3, y, x)
         input_image = resized_image.transpose((2, 0, 1))
