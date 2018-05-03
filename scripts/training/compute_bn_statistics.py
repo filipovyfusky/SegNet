@@ -172,7 +172,6 @@ def compute_bn_statistics(train_model, weights, out_path):
 
     # use testable net to get parameters
     print("Calculate BN stats...")
-    params = eval(testable_msg.layer[0].python_param.param_str)
     train_ims, train_labs = extract_dataset(testable_msg, params)
     num_datasets = len(train_ims)
     largest_train_size = max(len(dataset) for dataset in train_ims)
