@@ -530,23 +530,23 @@ layer {
   softmax_param {engine: CAFFE}
   loss_param: {
     weight_by_label_freqs: true
-    ignore_label: 16
-    class_weighting: 1.35923286
-    class_weighting: 0.19700279
-    class_weighting: 0.59140844
-    class_weighting: 0.11002103
-    class_weighting: 0.94509453
-    class_weighting: 2.0840371
-    class_weighting: 6.80332421
-    class_weighting: 4.36417918
-    class_weighting: 0.15595792
-    class_weighting: 1.59821294
-    class_weighting: 0.57162455
-    class_weighting: 1.64692292
-    class_weighting: 0.37394194
-    class_weighting: 1.15946967
-    class_weighting: 1.0
-    class_weighting: 3.20875891
+    ignore_label: 255
+    class_weighting: 0.20272525
+    class_weighting: 0.60858744
+    class_weighting: 0.11321688
+    class_weighting: 0.97254727
+    class_weighting: 2.14457339
+    class_weighting: 7.00094449
+    class_weighting: 4.49094814
+    class_weighting: 0.16048813
+    class_weighting: 1.6446372
+    class_weighting: 0.58822888
+    class_weighting: 1.69476209
+    class_weighting: 0.38480406
+    class_weighting: 1.19314949
+    class_weighting: 1.02904761
+    class_weighting: 3.30196568
+    class_weighting: 0.51407528
   }
 }
 layer {

@@ -833,8 +833,6 @@ layer {
   bottom: "pool5_mask"
   upsample_param {
     scale: 2
-    upsample_w: 30
-    upsample_h: 23
   }
 }
 layer {
@@ -1023,8 +1021,6 @@ layer {
   bottom: "pool4_mask"
   upsample_param {
     scale: 2
-    upsample_w: 60
-    upsample_h: 45
   }
 }
 layer {
@@ -1629,6 +1625,7 @@ layer {
     class_weighting: 1.19314949
     class_weighting: 1.02904761
     class_weighting: 3.30196568
+    class_weighting: 0.51407528
   }
 }
 layer {
