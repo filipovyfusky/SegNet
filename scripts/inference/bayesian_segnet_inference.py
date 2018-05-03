@@ -6,33 +6,23 @@ import time
 import caffe
 
 # Use colours which match Cityscapes
-# (128, 64, 128)  # 0  - Road
-# (232, 35, 244)  # 1  - Sidewalk
-# (69, 69, 69)    # 2  - Building
-# (156, 102, 102) # 3  - Wall/Fence
-# (153, 153, 153) # 4  - Pole
-# (30, 170, 250)  # 5  - Traffic Light
-# (0, 220, 220)   # 6  - Traffic Sign
-# (35, 142, 107)  # 7  - Vegetation
-# (152, 251, 152) # 8  - Terrain
-# (180, 130, 70)  # 9 -  Sky
-# (60, 20, 220)   # 10 - Person/Rider
-# (142, 0, 0)     # 11 - Car
-# (70, 0, 0)      # 12 - Truck
-# (100, 60, 0)    # 13 - Bus
-# (32, 11, 119)   # 14 - Bicycle/Motorcycle
-
-LABEL_COLOURS = np.array([[128, 64, 128], [232, 35, 244], [69, 69, 69],
-                          # 0 = road,     1 = sidewalk,   2 = building
-                          [156, 102, 102], [153, 153, 153], [30, 170, 250],
-                          # 3 = Wall/Fence, 4 = Pole,       5 = Traffic Light
-                          [0, 220, 220],      [35, 142, 107], [152, 251, 152],
-                          # 6 = Traffic Sign, 7 = vegetation, 8 = terrain,
-                          [180, 130, 70], [60, 20, 220],   [142, 0, 0],
-                          #  9 = sky, 10 = person / Rider, 11 = Car
-                          [70, 0, 0],   [100, 60, 0], [32, 11, 119]])
-                          # 12 = Truck, 13 = Bus,     14 = Bicycle/Motorcycle
-
+LABEL_COLOURS = np.zeros([256, 3])
+LABEL_COLOURS[0] = [128, 64, 128]   # Road
+LABEL_COLOURS[1] = [232, 35, 244]   # Sidewalk
+LABEL_COLOURS[2] = [69, 69, 69]     # Building
+LABEL_COLOURS[3] = [156, 102, 102]  # Wall/Fence
+LABEL_COLOURS[4] = [153, 153, 153]  # Pole
+LABEL_COLOURS[5] = [30, 170, 250]   # Traffic Light
+LABEL_COLOURS[6] = [0, 220, 220]    # Traffic Sign
+LABEL_COLOURS[7] = [35, 142, 107]   # Vegetation
+LABEL_COLOURS[8] = [152, 251, 152]  # Terrain
+LABEL_COLOURS[9] = [180, 130, 70]   # Sky
+LABEL_COLOURS[10] = [60, 20, 220]   # Person/Rider
+LABEL_COLOURS[11] = [142, 0, 0]     # Car
+LABEL_COLOURS[12] = [70, 0, 0]      # Truck
+LABEL_COLOURS[13] = [100, 60, 0]    # Bus
+LABEL_COLOURS[14] = [32, 11, 119]   # Truck
+LABEL_COLOURS[255] = [0, 0, 0]      # VOID
 
 def overlay_segmentation_results(input_image, segmented_image):
     """Overlays the segmentation results over the original image.
