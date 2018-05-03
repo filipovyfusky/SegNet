@@ -145,7 +145,7 @@ def get_args():
         assert os.path.exists(log_dir) or not log_dir, "Invalid path: {}".format(log_dir)
 
         # verify train net and val net prototxt parameters are correct
-        verify_model_params(solver_config.net, "train")
+        # verify_model_params(solver_config.net, "train")
         assert os.path.exists(init_weight) or init_weight in inf_weights or not init_weight, "Invalid path: {}".format(init_weight)
 
     assert len(solvers) == len(init_weights), "number of solver and initialization weight files mismatch"
