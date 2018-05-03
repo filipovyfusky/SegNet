@@ -1610,7 +1610,6 @@ layer {
   loss_param: {
     weight_by_label_freqs: true
     ignore_label: 255
-    ignore_label: 255
     class_weighting: 0.20272525
     class_weighting: 0.60858744
     class_weighting: 0.11321688
@@ -1619,7 +1618,7 @@ layer {
     class_weighting: 7.00094449
     class_weighting: 4.49094814
     class_weighting: 0.16048813
-    class_weighting: 1.6446372
+    class_weighting: 1.64463720
     class_weighting: 0.58822888
     class_weighting: 1.69476209
     class_weighting: 0.38480406
