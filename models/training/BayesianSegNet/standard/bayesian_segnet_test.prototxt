@@ -1430,7 +1430,7 @@ layer {
       type: "constant"
       value: 0
     }
-    num_output: 11
+    num_output: 15
     pad: 1
     kernel_size: 3
   }
