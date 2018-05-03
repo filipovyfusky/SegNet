@@ -9,19 +9,19 @@ from caffe.proto import caffe_pb2
 from google.protobuf import text_format
 
 
-def extract_dataset(net_message, params):
+def extract_dataset(net_message):
     assert net_message.layer[0].type == "DenseImageData"
     source = net_message.layer[0].dense_image_data_param.source
 
     with open(source) as f:
         data = f.read().split()
 
-    imgs = ImageCollection(data[::2])
+    ims = ImageCollection(data[::2])
     labs = ImageCollection(data[1::2])
 
-    assert len(imgs) == len(labs) > 0
+    assert len(ims) == len(labs) > 0
 
-    return imgs, labs
+    return ims, labs
 
 
 def make_testable(train_model_path):
@@ -46,11 +46,11 @@ def make_testable(train_model_path):
     return train_net
 
 
-def make_test_files(testable_net_path, train_weights_path, num_iterations,
-                    in_h, in_w):
+def make_test_files(testable_net_path, train_weights_path, num_iterations, test_shape):
     # load the train net prototxt as a protobuf message
     with open(testable_net_path) as f:
         testable_str = f.read()
+
     testable_msg = caffe_pb2.NetParameter()
     text_format.Merge(testable_str, testable_msg)
 
@@ -67,7 +67,7 @@ def make_test_files(testable_net_path, train_weights_path, num_iterations,
     bn_avg_var = {bn_var: np.squeeze(res[bn_var]).copy() for bn_var in bn_vars}
 
     # iterate over the rest of the training set
-    for i in range(1, num_iterations):
+    for i in xrange(1, num_iterations):
         res = net.forward()
         for bn_mean in bn_means:
             bn_avg_mean[bn_mean] += np.squeeze(res[bn_mean])
@@ -124,10 +124,10 @@ def make_test_files(testable_net_path, train_weights_path, num_iterations,
     for data_layer in data_layers:
         test_msg.layer.remove(data_layer)
     test_msg.input.append("data")
-    test_msg.input_dim.append(1)
-    test_msg.input_dim.append(3)
-    test_msg.input_dim.append(in_h)
-    test_msg.input_dim.append(in_w)
+    test_msg.input_dim.append(int(test_shape[0]))
+    test_msg.input_dim.append(int(test_shape[1]))
+    test_msg.input_dim.append(int(test_shape[2]))
+    test_msg.input_dim.append(int(test_shape[3]))
     # Set BN layers to INFERENCE so they use the new stat blobs
     # and remove mean, var top blobs.
     for l in test_msg.layer:
@@ -157,7 +157,7 @@ def make_parser():
     return p
 
 
-def compute_bn_statistics(train_model, weights, out_path):
+def compute_bn_statistics(train_model, weights, out_path, test_shape):
     # build and save testable net
     out_dir = os.path.dirname(out_path)
     if not os.path.exists(out_dir):
@@ -172,19 +172,14 @@ def compute_bn_statistics(train_model, weights, out_path):
 
     # use testable net to get parameters
     print("Calculate BN stats...")
-    train_ims, train_labs = extract_dataset(testable_msg, params)
-    num_datasets = len(train_ims)
-    largest_train_size = max(len(dataset) for dataset in train_ims)
-    minibatch_size = params['batch_size']
+    train_ims, train_labs = extract_dataset(testable_msg)
+    train_size = len(train_ims)
+    minibatch_size = testable_msg.layer[0].dense_image_data_param.batch_size
 
     # calculate BN stats based on parameters
-    numerator = largest_train_size * num_datasets
-    num_iterations = numerator // minibatch_size + (numerator % minibatch_size > 0)
-    in_h, in_w =(512, 1024)
-    test_net, test_msg = make_test_files(BN_calc_path, weights, num_iterations,
-                                         in_h, in_w)
+    num_iterations = train_size // minibatch_size + (train_size % minibatch_size > 0)
+    test_net, test_msg = make_test_files(BN_calc_path, weights, num_iterations, test_shape)
 
     print("Saving test net weights...")
     test_net.save(str(out_path))
     print("done")
-

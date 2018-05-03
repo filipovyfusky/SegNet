@@ -58,7 +58,7 @@ class SnapshotEventHandler(pyinotify.ProcessEvent):
     snapshot is calculated. Once completed, a random subsample of validation images are run through the
     network and the results are saved to the specified log_dir
     """
-    def __init__(self, training_model, test_model, test_image_file, log_dir, gpu):
+    def __init__(self, training_model, test_model, test_image_file, log_dir, gpu, test_shape):
         self.training_model = training_model
         self.test_model = test_model
         self.test_image_locs = []
@@ -69,9 +69,10 @@ class SnapshotEventHandler(pyinotify.ProcessEvent):
                 self.test_image_locs.append(line.split(" ")[0])
         self.log_dir = log_dir
         self.gpu = gpu
+        self.test_shape = test_shape
         # TODO(jskhu): Remove hardcoded amount of images to test on
         # TODO(jskhu): Add assertion that num_test_images is less than num of images in text file
-        self.num_test_images = 5
+        self.num_test_images = 10
         caffe.set_device(self.gpu)
         caffe.set_mode_gpu()
 
@@ -87,7 +88,8 @@ class SnapshotEventHandler(pyinotify.ProcessEvent):
 
         train_weight_path = event.pathname
         inf_weight_path = os.path.splitext(train_weight_path)[0] + '_inf.caffemodel'
-        compute_bn_statistics(self.training_model, train_weight_path, inf_weight_path)
+
+        compute_bn_statistics(self.training_model, train_weight_path, inf_weight_path, self.test_shape)
         weights_name = os.path.splitext(os.path.basename(event.pathname))[0]
 
         log_file = file('{}/{}.log'.format(self.log_dir, weights_name), "w+")
@@ -103,9 +105,9 @@ class SnapshotEventHandler(pyinotify.ProcessEvent):
         sys.stdout = temp_stdout
 
 
-def wait_and_test_snapshots(snapshot_dir, training_model, test_model, test_image_file, log_dir, gpu):
+def wait_and_test_snapshots(snapshot_dir, training_model, test_model, test_image_file, log_dir, gpu, test_shape):
     wm = pyinotify.WatchManager()
-    handler = SnapshotEventHandler(training_model, test_model, test_image_file, log_dir, gpu)
+    handler = SnapshotEventHandler(training_model, test_model, test_image_file, log_dir, gpu, test_shape)
     notifier = pyinotify.Notifier(wm, handler)
     mask = pyinotify.IN_CREATE
     # rec=False stops recursive check to nested folder. ONLY checks changes in snapshot_dir
@@ -143,6 +145,7 @@ def get_args():
     test_models = [os.path.expanduser(test_model) for test_model in config["Test_Models"].values()]
     test_images = [os.path.expanduser(test_image) for test_image in config["Test_Images"].values()]
     log_dirs = [os.path.expanduser(log_dir) for log_dir in config["Log_Dirs"].values()]
+    test_shape = [os.path.expanduser(test_shape) for test_shape in config["Test_Shape"].values()]
 
     # verify parameters are correct
     for solver, init_weight, solverstate, test_model, test_image, log_dir in zip(solvers, init_weights, solverstates, test_models, test_images, log_dirs):
@@ -169,7 +172,7 @@ def get_args():
     assert len(solvers) == len(test_images), "number of solver and test_images mismatch"
     assert len(solvers) == len(log_dirs), "number of solver and log_dirs mismatch"
 
-    return (args.run_inference, args.train_gpu, args.test_gpu, zip(solvers, init_weights, inf_weights, solverstates, test_models, test_images, log_dirs))
+    return (args.run_inference, args.train_gpu, args.test_gpu, zip(solvers, init_weights, inf_weights, solverstates, test_models, test_images, log_dirs, test_shape))
 
 
 def train(gpu, train_paths):
@@ -179,7 +182,7 @@ def train(gpu, train_paths):
     temp_out = file('~/tmp.txt', 'w+')
     sys.stdout = StreamTee(sys.stdout, temp_out)
 
-    for proto, init_weight_path, inf_weight_path, solverstate, test_model, test_image, log_dir in train_paths:
+    for proto, init_weight_path, inf_weight_path, solverstate, test_model, test_image, log_dir, test_shape in train_paths:
         # Get solver parameters
         solver_config = caffe_pb2.SolverParameter()
 
@@ -222,7 +225,7 @@ def train(gpu, train_paths):
 def train_network(gpu, train_path):
     caffe.set_device(gpu)
     caffe.set_mode_gpu()
-    proto, init_weight_path, inf_weight_path, solverstate, test_model, test_image, log_dir = train_path
+    proto, init_weight_path, inf_weight_path, solverstate, test_model, test_image, log_dir, test_shape = train_path
     # Get solver parameters
     solver_config = caffe_pb2.SolverParameter()
 
@@ -256,7 +259,9 @@ if __name__ == "__main__":
     run_inference, train_gpu, test_gpu, train_paths = get_args()
     for train_path in train_paths:
         print train_path
-        proto, init_weight_path, inf_weight_path, solverstate, test_model, test_images, log_dir = train_path
+        proto, init_weight_path, inf_weight_path, solverstate, test_model, test_images, log_dir, test_shape = train_path
+        print(test_shape)
+
         train_process = Process(target=train_network, args=(train_gpu, train_path))
         if run_inference:
             solver_config = caffe_pb2.SolverParameter()
@@ -269,7 +274,8 @@ if __name__ == "__main__":
                                                   test_model,
                                                   test_images,
                                                   log_dir,
-                                                  test_gpu))
+                                                  test_gpu,
+                                                  test_shape))
             test_snapshot_process.start()
 
         train_process.start()
