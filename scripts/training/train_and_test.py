@@ -82,12 +82,15 @@ class SnapshotEventHandler(pyinotify.ProcessEvent):
         # Checking _inf.caffemodel stops infinite recursion on created caffemodels
         if not event.pathname.endswith('.caffemodel') or event.pathname.endswith('_inf.caffemodel'):
             return
+
+        print("Snapshot created!")
+
         train_weight_path = event.pathname
         inf_weight_path = os.path.splitext(train_weight_path)[0] + '_inf.caffemodel'
         compute_bn_statistics(self.training_model, train_weight_path, inf_weight_path)
         weights_name = os.path.splitext(os.path.basename(event.pathname))[0]
 
-        log_file = file('{}/{}.log'.format(self.log_dir, weights_name) , "w+")
+        log_file = file('{}/{}.log'.format(self.log_dir, weights_name), "w+")
         image_prefix = '{}/{}_image'.format(self.log_dir, weights_name)
         temp_stdout = sys.stdout
         sys.stdout = log_file
