@@ -143,7 +143,6 @@ def run_inference(net, image, input_shape, confidence_output):
                   cv2.NORM_MINMAX,
                   cv2.CV_64FC1)
 
-    print("Mean ")
     return segmented_image, confidence, normalized_uncertainty
 
 
