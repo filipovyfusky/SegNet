@@ -150,9 +150,6 @@ def get_args():
     # Convert test_shape to a list of integers
     test_shape = [int(x) for x in test_shape[0].split(",")]
 
-    # Convert test_shape to a list of integers
-    test_shape = [int(x) for x in test_shape[0].split(",")]
-
     # verify parameters are correct
     for solver, init_weight, solverstate, test_model, test_image, log_dir in zip(solvers, init_weights, solverstates, test_models, test_images, log_dirs):
         assert os.path.exists(solver), "Cannot find {}".format(solver)
