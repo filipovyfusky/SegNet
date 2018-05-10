@@ -18,40 +18,6 @@ from google.protobuf import text_format
 from inference import bayesian_segnet_inference
 
 
-class StreamTee(object):
-    """
-    Class that allows streaming to console and to a log file at the same time. Instantiate class with the two
-    streams you want. Then set sys.stdout to the newly created object.
-    """
-    # Based on https://gist.github.com/327585 by Anand Kunal
-    def __init__(self, stream1, stream2):
-        self.stream1 = stream1
-        self.stream2 = stream2
-        self.__missing_method_name = None  # Hack!
-
-    def __getattribute__(self, name):
-        return object.__getattribute__(self, name)
-
-    def __getattr__(self, name):
-        self.__missing_method_name = name  # Could also be a property
-        return getattr(self, '__methodmissing__')
-
-    def __methodmissing__(self, *args, **kwargs):
-        # Emit method call to the log copy
-        callable2 = getattr(self.stream2, self.__missing_method_name)
-        callable2(*args, **kwargs)
-
-        # Emit method call to stdout (stream 1)
-        callable1 = getattr(self.stream1, self.__missing_method_name)
-        return callable1(*args, **kwargs)
-
-    def change_stream1(self, stream):
-        self.stream1 = stream
-
-    def change_stream2(self, stream):
-        self.stream2 = stream
-
-
 class SnapshotEventHandler(pyinotify.ProcessEvent):
     """
     Handles snapshots from Bayesian SegNet. Once a new .caffemodel is created, The batch norm for the
@@ -177,53 +143,6 @@ def get_args():
     assert len(test_shape) == 4, "test_shape must have a shape of 4"
 
     return (args.run_inference, args.train_gpu, args.test_gpu, zip(solvers, init_weights, inf_weights, solverstates, test_models, test_images, log_dirs), test_shape)
-
-
-def train(gpu, train_paths):
-    # init
-    caffe.set_device(train_gpu)
-    caffe.set_mode_gpu()
-    temp_out = file('~/tmp.txt', 'w+')
-    sys.stdout = StreamTee(sys.stdout, temp_out)
-
-    for proto, init_weight_path, inf_weight_path, solverstate, test_model, test_image, log_dir in train_paths:
-        # Get solver parameters
-        solver_config = caffe_pb2.SolverParameter()
-
-        # TODO(jskhu): Set log file
-        with open(proto) as solver:
-            text_format.Merge(str(solver.read()), solver_config)
-        train_weight_path = "{}_iter_{}_inf.caffemodel".format(solver_config.snapshot_prefix, solver_config.max_iter)
-
-        # If the testing is run in parallel with training, a seperate process will be made which will run everytime
-        # a new snapshot is created
-        if run_inference:
-            snapshot_dir = '/'.join(solver_config.snapshot_prefix.split('/')[0:-1])
-            test_snapshot_process = Process(target=wait_and_test_snapshots, args=(snapshot_dir, solver_config.net, test_model, test_image, log_dir, test_gpu))
-
-            test_snapshot_process.start()
-
-        solver = caffe.SGDSolver(str(proto))
-
-        # initialize weights if given
-        if solverstate:
-            solver.restore(solverstate)
-        elif init_weight_path:
-            solver.net.copy_from(init_weight_path)
-
-        # Train until completion, remove solver to free up GPU, and compute mean and variance for the batch norm layers
-        solver.solve()
-
-        print "Training complete"
-
-        # TODO(jskhu): Currently testing process dies as soon as training is completed. Find a way to either wait
-        # for the testing to complete, or gracefully shut it down
-        compute_bn_statistics(solver_config.net, train_weight_path, inf_weight_path)
-        if run_inference:
-            print "Stopping testing process"
-            test_snapshot_process.terminate()
-        del solver
-        # TODO(jskhu): Run entire validation set on trained network
 
 
 def train_network(gpu, train_path, test_shape):
