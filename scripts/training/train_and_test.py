@@ -24,7 +24,7 @@ class SnapshotEventHandler(pyinotify.ProcessEvent):
     snapshot is calculated. Once completed, a random subsample of validation images are run through the
     network and the results are saved to the specified log_dir
     """
-    def __init__(self, training_model, test_model, test_image_file, log_dir, gpu, test_shape):
+    def __init__(self, training_model, test_model, test_image_file, log_dir, gpu, test_shape, num_test_images=10):
         self.training_model = training_model
         self.test_model = test_model
         self.test_image_locs = []
@@ -36,9 +36,8 @@ class SnapshotEventHandler(pyinotify.ProcessEvent):
         self.log_dir = log_dir
         self.gpu = gpu
         self.test_shape = test_shape
-        # TODO(jskhu): Remove hardcoded amount of images to test on
-        # TODO(jskhu): Add assertion that num_test_images is less than num of images in text file
-        self.num_test_images = 10
+        # When there are less available test images than desired, use the smaller number:
+        self.num_test_images = min(num_test_images, len(test_image_locs))
         caffe.set_device(self.gpu)
         caffe.set_mode_gpu()
 
@@ -73,7 +72,7 @@ class SnapshotEventHandler(pyinotify.ProcessEvent):
 
 def wait_and_test_snapshots(snapshot_dir, training_model, test_model, test_image_file, log_dir, gpu, test_shape):
     wm = pyinotify.WatchManager()
-    handler = SnapshotEventHandler(training_model, test_model, test_image_file, log_dir, gpu, test_shape)
+    handler = SnapshotEventHandler(training_model, test_model, test_image_file, log_dir, gpu, test_shape, num_test_images=10)
     notifier = pyinotify.Notifier(wm, handler)
     mask = pyinotify.IN_CREATE
     # rec=False stops recursive check to nested folder. ONLY checks changes in snapshot_dir
