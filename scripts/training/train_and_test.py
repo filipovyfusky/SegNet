@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import random
 import argparse
 import configparser
@@ -233,7 +234,7 @@ if __name__ == "__main__":
         if run_inference:
             # Make sure that the last testing handle is completed before terminating the snapshot watching process
             while not handler.is_process_queue_empty():
-                wait(5)
+                time.sleep(5)
             test_snapshot_process.terminate()
 
         #TODO(jonathan): Run entire validation set on trained network
