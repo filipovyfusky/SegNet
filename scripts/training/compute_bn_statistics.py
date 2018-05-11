@@ -104,6 +104,7 @@ def make_test_files(testable_net_path, train_weights_path, num_iterations, test_
 
         new_scale_data[bn_layer] = new_gamma
         new_shift_data[bn_layer] = new_beta
+    
     print("New data:")
     print(new_scale_data.keys())
     print(new_shift_data.keys())
@@ -162,7 +163,9 @@ def compute_bn_statistics(train_model, weights, out_path, test_shape):
     out_dir = os.path.dirname(out_path)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
+
     print("Building BN calc net...")
+
     testable_msg = make_testable(train_model)
     BN_calc_path = os.path.join(
         out_dir, '__for_calculating_BN_stats_' + os.path.basename(train_model)
@@ -182,4 +185,5 @@ def compute_bn_statistics(train_model, weights, out_path, test_shape):
 
     print("Saving test net weights...")
     test_net.save(str(out_path))
+
     print("done")

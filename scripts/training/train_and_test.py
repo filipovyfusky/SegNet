@@ -3,8 +3,9 @@ import sys
 import random
 import argparse
 import configparser
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 import pyinotify
+
 sys.path.insert(0, os.path.expanduser("/PATH/TO/SegNet/caffe-segnet-cudnn7/python")) # Might not need this if you add to $PATH from ~/.bashrc
 sys.path.insert(0, os.path.expanduser("/PATH/TO/SegNet/custom_layers"))
 sys.path.insert(0, os.path.expanduser("/PATH/TO/SegNet/scripts"))
@@ -25,6 +26,11 @@ class SnapshotEventHandler(pyinotify.ProcessEvent):
     network and the results are saved to the specified log_dir
     """
     def __init__(self, training_model, test_model, test_image_file, log_dir, gpu, test_shape, num_test_images=10):
+
+        # Help us track how many of these processes are still running
+        # when we start process_IN_CREATE() we'll add an object to the queue
+        # and when it finishes we'll remove one. Just using it as a simple counter.
+        self.process_queue = Queue()
         self.training_model = training_model
         self.test_model = test_model
         self.test_image_locs = []
@@ -38,6 +44,7 @@ class SnapshotEventHandler(pyinotify.ProcessEvent):
         self.test_shape = test_shape
         # When there are less available test images than desired, use the smaller number:
         self.num_test_images = min(num_test_images, len(test_image_locs))
+
         caffe.set_device(self.gpu)
         caffe.set_mode_gpu()
 
@@ -48,6 +55,9 @@ class SnapshotEventHandler(pyinotify.ProcessEvent):
         # Checking _inf.caffemodel stops infinite recursion on created caffemodels
         if not event.pathname.endswith('.caffemodel') or event.pathname.endswith('_inf.caffemodel'):
             return
+
+
+        self.process_queue.put(1)
 
         print("Snapshot created!")
 
@@ -69,21 +79,30 @@ class SnapshotEventHandler(pyinotify.ProcessEvent):
 
         sys.stdout = temp_stdout
 
+        self.process_queue.get()
+    
+    def is_process_queue_empty():
+        return self.process_queue.empty()
 
-def wait_and_test_snapshots(snapshot_dir, training_model, test_model, test_image_file, log_dir, gpu, test_shape):
+
+
+def wait_and_test_snapshots(snapshot_dir, handler):
+    """
+    Watches the filesystem in the snapshot directory for new files being created
+    then executes the SnapshotEventHandler callback
+    """
     wm = pyinotify.WatchManager()
-    handler = SnapshotEventHandler(training_model, test_model, test_image_file, log_dir, gpu, test_shape, num_test_images=10)
-    notifier = pyinotify.Notifier(wm, handler)
     mask = pyinotify.IN_CREATE
     # rec=False stops recursive check to nested folder. ONLY checks changes in snapshot_dir
-    wdd = wm.add_watch(snapshot_dir, mask, rec=False)
+    wm.add_watch(snapshot_dir, mask, rec=False)
+
+    notifier = pyinotify.Notifier(wm, handler)
     notifier.loop()
 
 
 def get_args():
     """
-    parse any relevant runtime arguments
-    param arg_vals:    args to check (None defaults to command-line args)
+    Parse any relevant runtime arguments passed via command line
     return:            gpu id, solvers list, and weights list
     """
 
@@ -170,11 +189,12 @@ def train_network(gpu, train_path, test_shape):
     # Train until completion, remove solver to free up GPU, and compute mean and variance for the batch norm layers
     solver.solve()
 
-    print "Training complete"
+    print "Training complete."
 
+    print "Computing batch norm statistics..."
     compute_bn_statistics(solver_config.net, train_weight_path, inf_weight_path, test_shape)
+    print "Batch norm statistics computed."
     del solver
-    # TODO(jskhu): Run entire validation set on trained network
 
 
 if __name__ == "__main__":
@@ -191,21 +211,30 @@ if __name__ == "__main__":
             solver_config = caffe_pb2.SolverParameter()
             with open(proto) as solver:
                 text_format.Merge(str(solver.read()), solver_config)
+
             snapshot_dir = '/'.join(solver_config.snapshot_prefix.split('/')[0:-1])
+
+            snapshot_handler = SnapshotEventHandler(solver_config.net,
+                                                    test_model,
+                                                    test_images,
+                                                    log_dir,
+                                                    test_gpu,
+                                                    test_shape,
+                                                    num_test_images=10)
+
             test_snapshot_process = Process(target=wait_and_test_snapshots,
                                             args=(snapshot_dir,
-                                                  solver_config.net,
-                                                  test_model,
-                                                  test_images,
-                                                  log_dir,
-                                                  test_gpu,
-                                                  test_shape))
+                                                  snapshot_handler))
             test_snapshot_process.start()
 
         train_process.start()
         train_process.join()
-        # TODO(jskhu): Currently testing process dies as soon as training is completed. Find a way to either wait
-        # for the testing to complete, or gracefully shut it down
+
         if run_inference:
+            # Make sure that the last testing handle is completed before terminating the snapshot watching process
+            while not handler.is_process_queue_empty():
+                wait(5)
             test_snapshot_process.terminate()
+
+        #TODO(jonathan): Run entire validation set on trained network
 
