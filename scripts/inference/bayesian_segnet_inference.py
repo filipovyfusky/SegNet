@@ -21,7 +21,7 @@ LABEL_COLOURS[10] = [60, 20, 220]   # Person/Rider
 LABEL_COLOURS[11] = [142, 0, 0]     # Car
 LABEL_COLOURS[12] = [70, 0, 0]      # Truck
 LABEL_COLOURS[13] = [100, 60, 0]    # Bus
-LABEL_COLOURS[14] = [32, 11, 119]   # Truck
+LABEL_COLOURS[14] = [32, 11, 119]   # Bicycle/Motorcycle
 LABEL_COLOURS[255] = [0, 0, 0]      # VOID
 
 def overlay_segmentation_results(input_image, segmented_image):
@@ -143,7 +143,6 @@ def run_inference(net, image, input_shape, confidence_output):
                   cv2.NORM_MINMAX,
                   cv2.CV_64FC1)
 
-    print("Mean ")
     return segmented_image, confidence, normalized_uncertainty
 
 

@@ -146,7 +146,7 @@ def get_args():
     test_images = [os.path.expanduser(test_image) for test_image in config["Test_Images"].values()]
     log_dirs = [os.path.expanduser(log_dir) for log_dir in config["Log_Dirs"].values()]
     test_shape = [os.path.expanduser(test_shape) for test_shape in config["Test_Shape"].values()]
-
+    
     # Convert test_shape to a list of integers
     test_shape = [int(x) for x in test_shape[0].split(",")]
 
@@ -186,7 +186,7 @@ def train(gpu, train_paths):
     temp_out = file('~/tmp.txt', 'w+')
     sys.stdout = StreamTee(sys.stdout, temp_out)
 
-    for proto, init_weight_path, inf_weight_path, solverstate, test_model, test_image, log_dir, test_shape in train_paths:
+    for proto, init_weight_path, inf_weight_path, solverstate, test_model, test_image, log_dir in train_paths:
         # Get solver parameters
         solver_config = caffe_pb2.SolverParameter()
 
@@ -226,10 +226,10 @@ def train(gpu, train_paths):
         # TODO(jskhu): Run entire validation set on trained network
 
 
-def train_network(gpu, train_path):
+def train_network(gpu, train_path, test_shape):
     caffe.set_device(gpu)
     caffe.set_mode_gpu()
-    proto, init_weight_path, inf_weight_path, solverstate, test_model, test_image, log_dir, test_shape = train_path
+    proto, init_weight_path, inf_weight_path, solverstate, test_model, test_image, log_dir = train_path
     # Get solver parameters
     solver_config = caffe_pb2.SolverParameter()
 
@@ -245,16 +245,16 @@ def train_network(gpu, train_path):
 
     # initialize weights if given
     if solverstate:
-        solver.restore(solverstate)
+        solver.restore(str(solverstate))
     elif init_weight_path:
-        solver.net.copy_from(init_weight_path)
+        solver.net.copy_from(str(init_weight_path))
 
     # Train until completion, remove solver to free up GPU, and compute mean and variance for the batch norm layers
     solver.solve()
 
     print "Training complete"
 
-    compute_bn_statistics(solver_config.net, train_weight_path, inf_weight_path)
+    compute_bn_statistics(solver_config.net, train_weight_path, inf_weight_path, test_shape)
     del solver
     # TODO(jskhu): Run entire validation set on trained network
 
@@ -266,7 +266,9 @@ if __name__ == "__main__":
         proto, init_weight_path, inf_weight_path, solverstate, test_model, test_images, log_dir = train_path
         print(test_shape)
 
-        train_process = Process(target=train_network, args=(train_gpu, train_path))
+        train_process = Process(target=train_network, args=(train_gpu,
+                                                            train_path,
+                                                            test_shape))
         if run_inference:
             solver_config = caffe_pb2.SolverParameter()
             with open(proto) as solver:
