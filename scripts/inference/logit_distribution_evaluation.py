@@ -168,7 +168,7 @@ def prepare_segmentation_results(probs, output_shape, num_iterations):
     return segmented_image, classes, confidence, normalized_uncertainty, iod
 
 
-def prepare_logit_histograms(logits, output_shape, num_iterations, num_pixels):
+def prepare_logit_histograms(logits, output_shape, num_iterations, pixels):
     # Combine all trials together.
     logits = np.reshape(logits,
                         (num_iterations * output_shape[0],
@@ -180,13 +180,6 @@ def prepare_logit_histograms(logits, output_shape, num_iterations, num_pixels):
     var_logits = np.var(logits, axis=0, dtype=np.float64)
 
     classes = np.argmax(mean_logits, axis=0)
-
-    # Create an array with random pixel values from which to sample.
-    pixels = np.zeros((num_pixels, 2), dtype=np.int)
-    rows = np.random.randint(output_shape[2], size=num_pixels)
-    cols = np.random.randint(output_shape[3], size=num_pixels)
-    pixels[:, 0] = rows
-    pixels[:, 1] = cols
 
     for count, p in enumerate(pixels):
         pix_logits = np.zeros(logits.shape[0])
@@ -200,15 +193,49 @@ def prepare_logit_histograms(logits, output_shape, num_iterations, num_pixels):
         var = var_logits[classes[tuple(p)], p[0], p[1]]
         plt.xlabel("Logit Value")
         plt.ylabel("Frequency")
-        plt.title('Histogram for Pixel [{0}, {1}],'
+        plt.title('Logit Histogram for Pixel [{0}, {1}],'
                   ' Class {2}, {3} Iterations'
                   .format(p[0], p[1],
                           classes[tuple(p)],
                           num_iterations*output_shape[0]))
-        plt.savefig('pixel_{0}_histogram.png'.format(count))
+        plt.savefig('logit_histogram_pixel_{0}.png'.format(count))
 
-        plt.draw()
+    plt.close('all')
 
+
+def prepare_softmax_histograms(probs, output_shape, num_iterations, pixels):
+    # Combine all trials together.
+    probs = np.reshape(probs,
+                        (num_iterations * output_shape[0],
+                         output_shape[1],
+                         output_shape[2],
+                         output_shape[3]))
+
+    mean_probs = np.mean(probs, axis=0, dtype=np.float64)
+    var_probs = np.var(probs, axis=0, dtype=np.float64)
+
+    classes = np.argmax(mean_probs, axis=0)
+
+    for count, p in enumerate(pixels):
+        pix_probs = np.zeros(probs.shape[0])
+        for n in xrange(0, probs.shape[0]):
+            pix_probs[n] = probs[n, classes[tuple(p)], p[0], p[1]]
+
+        # Create histogram
+        fig = plt.figure()
+        fig = plt.hist(pix_probs)
+        mean = mean_probs[classes[tuple(p)], p[0], p[1]]
+        var = var_probs[classes[tuple(p)], p[0], p[1]]
+        plt.xlabel("Class Probability")
+        plt.ylabel("Frequency")
+        plt.title('Probability Histogram for Pixel [{0}, {1}],'
+                  ' Class {2}, {3} Iterations'
+                  .format(p[0], p[1],
+                          classes[tuple(p)],
+                          num_iterations * output_shape[0]))
+        plt.savefig('prob_histogram_pixel_{0}.png'.format(count))
+
+    plt.close('all')
 
 if __name__ == "__main__":
     # Import arguments
@@ -269,11 +296,22 @@ if __name__ == "__main__":
         prepare_segmentation_results(probs, output_shape, args.num_iterations)
     # display_segmentation_results(segmented_image, confidence, normalized_uncertainty)
 
+    # Generate random pixels for viewing histograms.
+    # Create an array with random pixel values from which to sample.
+    pixels = np.zeros((args.num_pixels, 2), dtype=np.int)
+    rows = np.random.randint(output_shape[2], size=args.num_pixels)
+    cols = np.random.randint(output_shape[3], size=args.num_pixels)
+    pixels[:, 0] = rows
+    pixels[:, 1] = cols
+
     prepare_logit_histograms(logits,
                              output_shape,
                              args.num_iterations,
-                             args.num_pixels)
-
+                             pixels)
+    prepare_softmax_histograms(probs,
+                               output_shape,
+                               args.num_iterations,
+                               pixels)
 
     # Cleanup windows
     cv2.destroyAllWindows()
