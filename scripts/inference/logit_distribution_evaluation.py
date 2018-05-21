@@ -198,7 +198,7 @@ def prepare_logit_histograms(logits, output_shape, num_iterations, pixels):
                   .format(p[0], p[1],
                           classes[tuple(p)],
                           num_iterations*output_shape[0]))
-        plt.savefig('logit_histogram_pixel_{0}.png'.format(count))
+        plt.savefig('plots/logit_histogram_pixel_{0}.png'.format(count))
 
     plt.close('all')
 
@@ -233,7 +233,7 @@ def prepare_softmax_histograms(probs, output_shape, num_iterations, pixels):
                   .format(p[0], p[1],
                           classes[tuple(p)],
                           num_iterations * output_shape[0]))
-        plt.savefig('prob_histogram_pixel_{0}.png'.format(count))
+        plt.savefig('plots/prob_histogram_pixel_{0}.png'.format(count))
 
     plt.close('all')
 
