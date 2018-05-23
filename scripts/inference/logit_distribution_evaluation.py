@@ -3,6 +3,8 @@ import argparse
 import cv2
 import time
 
+from scipy.stats import norm
+import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 
 import caffe
@@ -85,7 +87,7 @@ def display_segmentation_results(segmented_image, confidence_map, variance_map):
     cv2.imshow(conf_window, confidence_map)
     cv2.imshow(var_window, variance_map)
 
-    key = cv2.waitKey(0)
+    key = cv2.waitKey(300000)
 
 
 def save_image(segmented_image, confidence, normalized_uncertainty, image_prefix):
@@ -146,26 +148,23 @@ def prepare_segmentation_results(probs, output_shape, num_iterations):
     # Prepare confidence results
     confidence = np.amax(mean_probs, axis=0)
 
-    # Prepare uncertainty results. Index variance logits by class detection
+    # Prepare variance results. Index variance logits by class detection
     colgrid, rowgrid = np.ogrid[:output_shape[2], :output_shape[3]]
-    uncertainty = var_probs[classes, colgrid, rowgrid]
-
-    # Calculate the index of dispersion
-    iod = uncertainty / confidence
+    variance = var_probs[classes, colgrid, rowgrid]
 
     # Normalize variance for display
-    normalized_uncertainty = np.zeros((uncertainty.shape[0],
-                                       uncertainty.shape[1]),
+    normalized_variance = np.zeros((variance.shape[0],
+                                       variance.shape[1]),
                                       np.float64)
 
-    cv2.normalize(uncertainty,
-                  normalized_uncertainty,
+    cv2.normalize(variance,
+                  normalized_variance,
                   0,
                   1,
                   cv2.NORM_MINMAX,
                   cv2.CV_64FC1)
 
-    return segmented_image, classes, confidence, normalized_uncertainty, iod
+    return segmented_image, classes, confidence, normalized_variance
 
 
 def prepare_logit_histograms(logits, output_shape, num_iterations, pixels):
@@ -176,28 +175,37 @@ def prepare_logit_histograms(logits, output_shape, num_iterations, pixels):
                          output_shape[2],
                          output_shape[3]))
 
+    # Calculate the logit mean across the iterations, and the detected class
     mean_logits = np.mean(logits, axis=0, dtype=np.float64)
-    var_logits = np.var(logits, axis=0, dtype=np.float64)
-
     classes = np.argmax(mean_logits, axis=0)
 
     for count, p in enumerate(pixels):
         pix_logits = np.zeros(logits.shape[0])
+
+        # Extract all logit measurements for the detected class,
         for n in xrange(0, logits.shape[0]):
             pix_logits[n] = logits[n, classes[tuple(p)], p[0], p[1]]
 
+        # Calculate the mean and variance for the detected class logits.
+        mean = np.mean(pix_logits)
+        var = np.var(pix_logits)
+        stdev = np.sqrt(var)
+
         # Create histogram
-        fig = plt.figure()
-        fig = plt.hist(pix_logits)
-        mean = mean_logits[classes[tuple(p)], p[0], p[1]]
-        var = var_logits[classes[tuple(p)], p[0], p[1]]
+        plt.figure()
+        n, bins, patches = plt.hist(pix_logits, density=True)
+
+        # Create gaussian line
+        y = norm.pdf(bins, mean, stdev)
+        l = plt.plot(bins, y, 'r--', linewidth=2)
+
         plt.xlabel("Logit Value")
         plt.ylabel("Frequency")
-        plt.title('Logit Histogram for Pixel [{0}, {1}],'
-                  ' Class {2}, {3} Iterations'
+        plt.title('Logit Pixel Histogram [{0}, {1}],'
+                  ' Class {2}, {3} Iter, Mean {4:.3f}, Var {5:.3f}'
                   .format(p[0], p[1],
                           classes[tuple(p)],
-                          num_iterations*output_shape[0]))
+                          num_iterations*output_shape[0], mean, var))
         plt.savefig('plots/logit_histogram_pixel_{0}.png'.format(count))
 
     plt.close('all')
@@ -223,16 +231,17 @@ def prepare_softmax_histograms(probs, output_shape, num_iterations, pixels):
 
         # Create histogram
         fig = plt.figure()
-        fig = plt.hist(pix_probs)
-        mean = mean_probs[classes[tuple(p)], p[0], p[1]]
-        var = var_probs[classes[tuple(p)], p[0], p[1]]
+        fig = plt.hist(pix_probs, density=True)
+        mean = np.mean(pix_probs)
+        var = np.var(pix_probs)
         plt.xlabel("Class Probability")
         plt.ylabel("Frequency")
-        plt.title('Probability Histogram for Pixel [{0}, {1}],'
-                  ' Class {2}, {3} Iterations'
+        plt.title('Softmax Pixel Histogram [{0}, {1}],'
+                  ' Class {2}, {3} Iter, Mean {4:.3f}, Var {5:.3f}'
                   .format(p[0], p[1],
                           classes[tuple(p)],
-                          num_iterations * output_shape[0]))
+                          num_iterations * output_shape[0],
+                          mean, var))
         plt.savefig('plots/prob_histogram_pixel_{0}.png'.format(count))
 
     plt.close('all')
@@ -292,7 +301,7 @@ if __name__ == "__main__":
         probs[n, :] = prob_trial
 
     # Prepare and display segmentation results
-    segmented_image, classes, confidence, normalized_uncertainty, iod = \
+    segmented_image, classes, confidence, normalized_uncertainty = \
         prepare_segmentation_results(probs, output_shape, args.num_iterations)
     # display_segmentation_results(segmented_image, confidence, normalized_uncertainty)
 
