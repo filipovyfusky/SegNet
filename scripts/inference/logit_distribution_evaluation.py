@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import caffe
 
 # Use colours which match Cityscapes
-LABEL_COLOURS = np.zeros([256, 3])
+LABEL_COLOURS = np.zeros([256, 3]) + 1000
 LABEL_COLOURS[0] = [128, 64, 128]   # Road
 LABEL_COLOURS[1] = [232, 35, 244]   # Sidewalk
 LABEL_COLOURS[2] = [69, 69, 69]     # Building
@@ -177,7 +177,11 @@ def prepare_logit_histograms(logits, output_shape, num_iterations, pixels):
 
     # Calculate the logit mean across the iterations, and the detected class
     mean_logits = np.mean(logits, axis=0, dtype=np.float64)
+    var_logits = np.var(logits, axis=0, dtype=np.float64)
     classes = np.argmax(mean_logits, axis=0)
+
+    file = open("plots/logits.txt", "w")
+    file.write("MEAN          VARIANCE\n")
 
     for count, p in enumerate(pixels):
         pix_logits = np.zeros(logits.shape[0])
@@ -191,6 +195,8 @@ def prepare_logit_histograms(logits, output_shape, num_iterations, pixels):
         var = np.var(pix_logits)
         stdev = np.sqrt(var)
 
+        file.write("{0} {1}\n".format(mean, var))
+
         # Create histogram
         plt.figure()
         n, bins, patches = plt.hist(pix_logits, density=True)
@@ -201,14 +207,15 @@ def prepare_logit_histograms(logits, output_shape, num_iterations, pixels):
 
         plt.xlabel("Logit Value")
         plt.ylabel("Frequency")
-        plt.title('Logit Pixel Histogram [{0}, {1}],'
+        plt.title('Logit Histogram [{0}, {1}],'
                   ' Class {2}, {3} Iter, Mean {4:.3f}, Var {5:.3f}'
                   .format(p[0], p[1],
                           classes[tuple(p)],
                           num_iterations*output_shape[0], mean, var))
         plt.savefig('plots/logit_histogram_pixel_{0}.png'.format(count))
+        plt.close('all')
 
-    plt.close('all')
+    file.close()
 
 
 def prepare_softmax_histograms(probs, output_shape, num_iterations, pixels):
@@ -224,6 +231,9 @@ def prepare_softmax_histograms(probs, output_shape, num_iterations, pixels):
 
     classes = np.argmax(mean_probs, axis=0)
 
+    file = open("plots/softmax.txt", "w")
+    file.write("MEAN          VARIANCE\n")
+
     for count, p in enumerate(pixels):
         pix_probs = np.zeros(probs.shape[0])
         for n in xrange(0, probs.shape[0]):
@@ -234,17 +244,21 @@ def prepare_softmax_histograms(probs, output_shape, num_iterations, pixels):
         fig = plt.hist(pix_probs, density=True)
         mean = np.mean(pix_probs)
         var = np.var(pix_probs)
+
+        file.write("{0} {1}\n".format(mean, var))
+
         plt.xlabel("Class Probability")
         plt.ylabel("Frequency")
-        plt.title('Softmax Pixel Histogram [{0}, {1}],'
+        plt.title('Softmax Histogram [{0}, {1}],'
                   ' Class {2}, {3} Iter, Mean {4:.3f}, Var {5:.3f}'
                   .format(p[0], p[1],
                           classes[tuple(p)],
                           num_iterations * output_shape[0],
                           mean, var))
         plt.savefig('plots/prob_histogram_pixel_{0}.png'.format(count))
+        plt.close('all')
 
-    plt.close('all')
+    file.close()
 
 if __name__ == "__main__":
     # Import arguments
@@ -303,7 +317,7 @@ if __name__ == "__main__":
     # Prepare and display segmentation results
     segmented_image, classes, confidence, normalized_uncertainty = \
         prepare_segmentation_results(probs, output_shape, args.num_iterations)
-    # display_segmentation_results(segmented_image, confidence, normalized_uncertainty)
+    display_segmentation_results(segmented_image, confidence, normalized_uncertainty)
 
     # Generate random pixels for viewing histograms.
     # Create an array with random pixel values from which to sample.
