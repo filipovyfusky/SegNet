@@ -20,8 +20,9 @@ LABEL_COLOURS[9] = [180, 130, 70]   # Sky
 LABEL_COLOURS[10] = [60, 20, 220]   # Person/Rider
 LABEL_COLOURS[11] = [142, 0, 0]     # Car
 LABEL_COLOURS[12] = [70, 0, 0]      # Bus/Truck
-LABEL_COLOURS[13] = [32, 11, 119]   # Bicycle/Motorcycle 
+LABEL_COLOURS[13] = [32, 11, 119]   # Motorcycle/Bicycle
 LABEL_COLOURS[255] = [0, 0, 0]      # VOID
+
 
 def overlay_segmentation_results(input_image, segmented_image):
     """Overlays the segmentation results over the original image.
@@ -51,10 +52,6 @@ def display_results(segmented_image, confidence_map, variance_map):
     cv2.namedWindow(seg_window)
     cv2.namedWindow(conf_window)
     cv2.namedWindow(var_window)
-
-    cv2.moveWindow(seg_window, 100, 500)
-    cv2.moveWindow(conf_window, 600, 500)
-    cv2.moveWindow(var_window, 1100, 500)
 
     cv2.imshow(seg_window, segmented_image)
     cv2.imshow(conf_window, confidence_map)
@@ -255,7 +252,7 @@ if __name__ == "__main__":
 
     # Access blob data
     input_shape = net.blobs['data'].data.shape
-    confidence_output = net.blobs['prob'].data
+    confidence_output = net.blobs['prob']
 
     cap = cv2.VideoCapture(args.input_source)
 
@@ -318,8 +315,6 @@ if __name__ == "__main__":
                       cv2.CV_64FC1)
 
         display_results(segmented_image, confidence, normalized_uncertainty)
-
-        print("Mean ")
 
         key = cv2.waitKey(1)
         if key == 27:  # exit on ESC

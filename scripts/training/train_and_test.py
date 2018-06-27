@@ -245,9 +245,9 @@ def train_network(gpu, train_path, test_shape):
 
     # initialize weights if given
     if solverstate:
-        solver.restore(solverstate)
+        solver.restore(str(solverstate))
     elif init_weight_path:
-        solver.net.copy_from(init_weight_path)
+        solver.net.copy_from(str(init_weight_path))
 
     # Train until completion, remove solver to free up GPU, and compute mean and variance for the batch norm layers
     solver.solve()
