@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import caffe
 
 # Use colours which match Cityscapes
-LABEL_COLOURS = np.zeros([256, 3]) + 1000
 LABEL_COLOURS[0] = [128, 64, 128]   # Road
 LABEL_COLOURS[1] = [232, 35, 244]   # Sidewalk
 LABEL_COLOURS[2] = [69, 69, 69]     # Building
@@ -74,22 +73,6 @@ def make_parser():
     return parser
 
 
-def display_segmentation_results(segmented_image, confidence_map, variance_map):
-    seg_window = "segmented_image"
-    conf_window = "confidence_map"
-    var_window = "variance_map"
-
-    cv2.namedWindow(seg_window)
-    cv2.namedWindow(conf_window)
-    cv2.namedWindow(var_window)
-
-    cv2.imshow(seg_window, segmented_image)
-    cv2.imshow(conf_window, confidence_map)
-    cv2.imshow(var_window, variance_map)
-
-    key = cv2.waitKey(300000)
-
-
 def save_image(segmented_image, confidence, normalized_uncertainty, image_prefix):
     cv2.imwrite('{}_segmented.jpg'.format(image_prefix), segmented_image)
     cv2.imwrite('{}_confidence.jpg'.format(image_prefix), confidence)
@@ -129,8 +112,30 @@ def overlay_segmentation_results(input_image, segmented_image):
     return segmented_image
 
 
-def prepare_segmentation_results(probs, output_shape, num_iterations):
+def display_segmentation_results(segmented_image, confidence_map, variance_map):
+    seg_window = "segmented_image"
+    conf_window = "confidence_map"
+    var_window = "variance_map"
+
+    cv2.namedWindow(seg_window)
+    cv2.namedWindow(conf_window)
+    cv2.namedWindow(var_window)
+
+    cv2.imshow(seg_window, segmented_image)
+    cv2.imshow(conf_window, confidence_map)
+    cv2.imshow(var_window, variance_map)
+
+    key = cv2.waitKey(0)
+
+
+def prepare_segmentation_results(probs, logits, output_shape, num_iterations):
     probs = np.reshape(probs,
+                       (num_iterations * output_shape[0],
+                        output_shape[1],
+                        output_shape[2],
+                        output_shape[3]))
+
+    logits = np.reshape(logits,
                        (num_iterations * output_shape[0],
                         output_shape[1],
                         output_shape[2],
@@ -138,6 +143,10 @@ def prepare_segmentation_results(probs, output_shape, num_iterations):
 
     mean_probs = np.mean(probs, axis=0, dtype=np.float64)
     var_probs = np.var(probs, axis=0, dtype=np.float64)
+
+    mean_logits = np.mean(logits, axis=0, dtype=np.float64)
+    var_logits = np.var(logits, axis=0, dtype=np.float64)
+    var_iod = var_logits / mean_logits
 
     # Prepare segmented image results
     classes = np.argmax(mean_probs, axis=0)
@@ -150,12 +159,14 @@ def prepare_segmentation_results(probs, output_shape, num_iterations):
 
     # Prepare variance results. Index variance logits by class detection
     colgrid, rowgrid = np.ogrid[:output_shape[2], :output_shape[3]]
-    variance = var_probs[classes, colgrid, rowgrid]
+    # variance = var_probs[classes, colgrid, rowgrid]
+    # variance = var_logits[classes, colgrid, rowgrid]
+    variance = var_iod[classes, colgrid, rowgrid]
 
     # Normalize variance for display
     normalized_variance = np.zeros((variance.shape[0],
-                                       variance.shape[1]),
-                                      np.float64)
+                                    variance.shape[1]),
+                                    np.float64)
 
     cv2.normalize(variance,
                   normalized_variance,
@@ -316,7 +327,7 @@ if __name__ == "__main__":
 
     # Prepare and display segmentation results
     segmented_image, classes, confidence, normalized_uncertainty = \
-        prepare_segmentation_results(probs, output_shape, args.num_iterations)
+        prepare_segmentation_results(probs, logits, output_shape, args.num_iterations)
     display_segmentation_results(segmented_image, confidence, normalized_uncertainty)
 
     # Generate random pixels for viewing histograms.
