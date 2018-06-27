@@ -19,9 +19,8 @@ LABEL_COLOURS[8] = [152, 251, 152]  # Terrain
 LABEL_COLOURS[9] = [180, 130, 70]   # Sky
 LABEL_COLOURS[10] = [60, 20, 220]   # Person/Rider
 LABEL_COLOURS[11] = [142, 0, 0]     # Car
-LABEL_COLOURS[12] = [70, 0, 0]      # Truck
-LABEL_COLOURS[13] = [100, 60, 0]    # Bus
-LABEL_COLOURS[14] = [32, 11, 119]   # Truck
+LABEL_COLOURS[12] = [70, 0, 0]      # Bus/Truck
+LABEL_COLOURS[13] = [32, 11, 119]   # Bicycle/Motorcycle 
 LABEL_COLOURS[255] = [0, 0, 0]      # VOID
 
 def overlay_segmentation_results(input_image, segmented_image):
