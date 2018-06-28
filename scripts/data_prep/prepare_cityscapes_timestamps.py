@@ -48,7 +48,7 @@ def extract_timestamps(path):
     timestamps = timestamps - timestamps[0]
 
     # Convert from nano seconds to seconds
-    timestamps = timestamps * 10E-9
+    timestamps = timestamps * 1E-9
 
 
     return timestamps
