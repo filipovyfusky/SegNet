@@ -1,0 +1,18 @@
+type: "AdaDelta"
+base_lr: 0.5
+
+#delta: 1e-7
+#momentum: 0.9
+#momentum2: 0.999
+
+max_iter: 19500
+weight_decay: 0.0005
+snapshot: 19500
+
+net: "/media/phil/SegNet/BayesFull/pretrained/train_freeze_almost.prototxt"
+lr_policy: "fixed"
+
+display: 65
+snapshot_prefix: "/media/phil/SegNet/BayesFull/pretrained/4/snap"  	
+solver_mode: GPU
+

@@ -1,0 +1,13 @@
+type: "AdaDelta"
+base_lr: 0.5
+
+max_iter: 7800
+weight_decay: 0.0005
+snapshot: 7800
+
+net: "/media/phil/SegNet/BayesBasic/pretrained/train_freeze.prototxt"  		
+lr_policy: "fixed"
+
+display: 65
+snapshot_prefix: "/media/phil/SegNet/BayesBasic/pretrained/2/snap"  	
+solver_mode: GPU
