@@ -10,7 +10,7 @@ SegNet requires a modified version of Caffe to run. Please see the [`caffe-segne
 
 My master's thesis:
 
-LINK
+ŠPILA, Filip. Sémantická segmentace obrazu pomocí konvolučních neuronových sítí [online]. Brno, 2020 [cit. 2020-06-30]. Available at: https://www.vutbr.cz/studenti/zav-prace/detail/124659. Master's thesis. Brno University of Technology, Faculty of Mechanical Engineering, Institute of Solid Mechanics, Mechatronics and Biomechanics. Supervisor Jiří Krejsa.
 
 For more information about the SegNet architecture:
 
