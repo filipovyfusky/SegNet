@@ -1,8 +1,8 @@
 # SegNet and Bayesian SegNet Tutorial
 
-This repository contains all files for running SegNet variants as described in my Master's thesis. 
+This repository contains all files for running SegNet variants as described in my master's thesis. Forked from https://github.com/navganti/SegNet.
 
-## Caffe-SegNet
+## caffe-segnet-cudnn5
 
 SegNet requires a modified version of Caffe to run. Please see the [`caffe-segnet-cudnn5`](https://github.com/filipovyfusky/caffe-segnet-cudnn5) and follow the installation instructions.
 
@@ -28,5 +28,7 @@ http://creativecommons.org/licenses/by-nc/4.0/
 ## Copyright
 
 Alex Kendall
+
 agk34@cam.ac.uk
+
 Cambridge University
